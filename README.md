@@ -1,28 +1,18 @@
-# PocketSql
 PocketSQL API
-A lightweight .NET 8 Web API that provides a simple HTTP interface for executing SQL queries and inspecting database schemas. Designed for embedded/portable devices like the Clockwork Pi uConsole, but works anywhere.
+PocketSQL API is a lightweight .NET 8 Web API that provides an HTTP interface for executing SQL queries and inspecting database schemas.
+It is designed for lightweight environments such as the Clockwork Pi uConsole, but works on any system.
 
-🚀 Features
-
-✅ Run SQL Queries
-
-Send SELECT, INSERT, UPDATE, DELETE, CREATE TABLE etc.
+Features
+Run SQL queries (SELECT, INSERT, UPDATE, DELETE, CREATE TABLE, etc.)
 
 Returns JSON results or rows affected
 
-✅ Inspect Database Schema
+Inspect database schema (tables and columns)
 
-/api/sqlquery/schema returns all tables & columns in the connected database
+Clean Query/Handler pattern (controllers stay thin)
 
-✅ Clean Query/Handler Pattern
-
-Controllers stay thin
-
-Query handlers encapsulate all DB logic and error handling
-
-✅ CORS + Swagger Ready
-
-Works seamlessly with a React (Vite) frontend
+Built-in error handling with a consistent response format
 
 Swagger UI for easy testing
 
+CORS configured for a React (Vite) frontend
