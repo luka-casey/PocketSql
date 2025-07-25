@@ -3,6 +3,7 @@ PocketSQL API
 A lightweight .NET 8 Web API that provides a simple HTTP interface for executing SQL queries and inspecting database schemas. Designed for embedded/portable devices like the Clockwork Pi uConsole, but works anywhere.
 
 🚀 Features
+
 ✅ Run SQL Queries
 
 Send SELECT, INSERT, UPDATE, DELETE, CREATE TABLE etc.
