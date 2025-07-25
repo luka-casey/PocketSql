@@ -1,0 +1,86 @@
+# -------------------------
+# Node.js / React / Vite
+# -------------------------
+node_modules/
+dist/
+build/
+.vite/
+*.local
+*.log
+*.lock
+
+# Vite cache
+vite.config.ts.timestamp-*
+vite.config.*.timestamp-*
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Yarn / npm / pnpm
+.yarn/*
+.pnp.*
+.pnpm-debug.log
+
+# IDE settings
+.idea/
+.vscode/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# TypeScript
+# -------------------------
+*.tsbuildinfo
+
+# -------------------------
+# .NET / ASP.NET Core
+# -------------------------
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.dll
+*.pdb
+*.mdb
+*.exe
+*.cache
+*.log
+project.lock.json
+
+# Visual Studio specific
+.vs/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+
+# Resharper / Rider
+_ReSharper*/
+*.DotSettings.user
+
+# ASP.NET publish outputs
+wwwroot/lib/
+
+# -------------------------
+# Other
+# -------------------------
+# Local test files
+*.testoutput
+
+# Coverage reports
+coverage/
+lcov-report/
+*.lcov
+
+# Temporary files
+tmp/
+temp/
