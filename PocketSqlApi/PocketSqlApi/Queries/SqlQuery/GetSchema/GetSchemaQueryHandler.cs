@@ -39,18 +39,19 @@ public class GetSchemaQueryHandler
             );
 
             // Combine into schema structure
-            var schema = tables.Select(tableName => new
+            List<TableSchema> schema = tables.Select(tableName => new TableSchema
             {
-                table = tableName,
-                columns = columns
+                Table = tableName,
+                Columns = columns
                     .Where(c => c.TABLE_NAME == tableName)
-                    .Select(c => new
+                    .Select(c => new ColumnInfo
                     {
-                        columnName = c.COLUMN_NAME,
-                        dataType = c.DATA_TYPE
+                        ColumnName = c.COLUMN_NAME,
+                        DataType = c.DATA_TYPE
                     })
                     .ToList()
-            });
+            }).ToList();
+
 
             return SqlQueryResult.Ok(schema);
         }

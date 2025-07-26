@@ -15,7 +15,7 @@ public class SqlQueryController : ControllerBase
         _config = config;
     }
 
-    [HttpPost]
+    [HttpPost("execute")]
     public async Task<IActionResult> ExecuteQuery([FromBody] SqlQueryRequest request)
     {
         var result = await new ExecuteQueryHandler(_config.GetConnectionString("Default"))
