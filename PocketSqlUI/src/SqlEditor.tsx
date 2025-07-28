@@ -1,31 +1,23 @@
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useState, useRef, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import type { OnMount } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import type { TableSchema } from "./Interfaces";
 import { fetchSchema, executeQuery } from "./Clients";
-import { type GridPaginationModel } from "@mui/x-data-grid";
-import { Box, Button, Paper, Typography } from "@mui/material";
-import { ScrollableDataGrid } from "./ScrollableDataGrid";
-
+import { Box, Paper, Typography } from "@mui/material";
+import DataTable, { type TableColumn } from "react-data-table-component";
 
 export function SqlEditor() {
   const [schema, setSchema] = useState<TableSchema[]>([]);
   const schemaRef = useRef<TableSchema[]>([]);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const dataTableRef = useRef<HTMLDivElement | null>(null);
   const [sqlValue, setSqlValue] = useState("SELECT * FROM ");
   const [results, setResults] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-
-// inside your component:
-
-const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-  page: 0,
-  pageSize: 5,
-});
+  const [columns, setColumns] = useState<TableColumn<any>[]>([]);
 
   useEffect(() => {
     fetchSchema()
@@ -33,10 +25,45 @@ const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
         setSchema(data);
         schemaRef.current = data;
       })
-      .catch((error) => {
-        console.error("Error fetching schema:", error);
-      });
+      .catch((error) => console.error("Error fetching schema:", error));
   }, []);
+
+  useEffect(() => {
+    if (results.length > 0) {
+      const dynamicColumns: TableColumn<any>[] = Object.keys(results[0]).map(
+        (key) => ({
+          name: key,
+          selector: (row: any) => row[key],
+          sortable: true,
+          wrap: true,
+        })
+      );
+      setColumns(dynamicColumns);
+    } else {
+      setColumns([]);
+    }
+  }, [results]);
+
+  const handleRunClick = async () => {
+    if (!editorRef.current) return;
+
+    const currentSql = editorRef.current.getValue();
+    setSqlValue(currentSql);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await executeQuery({ Sql: currentSql });
+      console.log("SQL Results:", data);
+
+      const freshRows = data.map((row: any) => ({ ...row }));
+      setResults(freshRows);
+    } catch (err: any) {
+      setError(err.message || "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEditorMount: OnMount = (editor, monacoInstance) => {
     editorRef.current = editor;
@@ -81,121 +108,119 @@ const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
         return { suggestions };
       },
     });
+
+    editor.addCommand(
+      monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Enter,
+      () => {
+        handleRunClick();
+      }
+    );
+
+    editor.onKeyDown((e) => {
+      if (e.shiftKey && e.browserEvent.key === "Tab") {
+        e.preventDefault();
+        dataTableRef.current?.focus();
+      }
+    });
   };
 
-  const handleRunClick = async () => {
-    if (!editorRef.current) return;
-
-    const currentSql = editorRef.current.getValue();
-    setSqlValue(currentSql);
-    setLoading(true);
-    setError(null);
-    setResults([]);
-
-    try {
-      const data = await executeQuery({ Sql: currentSql });
-      setResults(data);
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Prepare columns dynamically from the first result object keys
-  const columns: GridColDef[] = results.length > 0
-    ? Object.keys(results[0]).map((key) => ({
-        field: key,
-        headerName: key,
-        width: 150,
-      }))
-    : [];
-
-
-return (
-  <Box
-    sx={{
-      display: "flex",
-      flexDirection: "row",
-      height: "100vh",       // FULL height of the page
-      bgcolor: "#121212",
-      color: "white",
-    }}
-  >
-    {/* LEFT COLUMN - SQL Editor */}
+  return (
     <Box
       sx={{
-        flex: 1,
         display: "flex",
-        flexDirection: "column",
-        p: 2,
-        gap: 2,
-        overflow: "hidden"
+        flexDirection: "row",
+        height: "100vh",
+        bgcolor: "#121212",
+        color: "white",
       }}
     >
-      <Paper elevation={3} sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        <Typography variant="h6" sx={{ p: 1 }}>SQL Query Editor</Typography>
-        <Editor
-          defaultLanguage="sql"
-          defaultValue={sqlValue}
-          theme="vs-dark"
-          onMount={handleEditorMount}
-          height="100%"      // fill available space
-          options={{ fontSize: 20 }}  // set font size in pixels here
-        />
-      </Paper>
-
-      {/* Run Button */}
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleRunClick}
-        disabled={loading}
-        sx={{ alignSelf: "flex-start" }}
+      {/* LEFT COLUMN - SQL Editor */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          p: 2,
+          gap: 1,
+          overflow: "hidden",
+        }}
       >
-        {loading ? "Running..." : "Run Query"}
-      </Button>
-    </Box>
+        <Paper
+          elevation={3}
+          sx={{ flex: 1, display: "flex", flexDirection: "column" }}
+        >
+          <Editor
+            defaultLanguage="sql"
+            defaultValue={sqlValue}
+            theme="vs-dark"
+            onMount={handleEditorMount}
+            height="100%"
+            options={{
+              wordWrap: "on",
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              fontSize: 14,
+            }}
+          />
+        </Paper>
 
-    {/* RIGHT COLUMN - Results */}
-    <Box
-      sx={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        p: 2,
-        gap: 2,
-        overflow: "hidden"
-      }}
-    >
-      {error && (
-        <Typography color="error" variant="body2">
-          Error: {error}
+        {/* Keyboard shortcut info */}
+        <Typography
+          variant="body2"
+          color="grey.400"
+          sx={{ mt: 1, userSelect: "none", fontStyle: "italic" }}
+        >
+          Use <code>Shift+Enter</code> to run the
+          query. Use <code>Shift+Tab</code> to switch focus between editor and
+          results.
         </Typography>
-      )}
+      </Box>
 
-      {results.length > 0 ? (
-        <Paper elevation={3} sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <Typography variant="h6" sx={{ p: 1 }}>Query Results</Typography>
-          <Box sx={{ flex: 1 }}>
-            <ScrollableDataGrid 
-            rows={results}
-            columns={columns}
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            getRowId={(row) => row.Id ?? JSON.stringify(row)}
-            
-            />
+      {/* RIGHT COLUMN - Results */}
+      <Box
+        ref={dataTableRef}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.shiftKey && e.key === "Tab") {
+            e.preventDefault();
+            editorRef.current?.focus();
+          }
+        }}
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          p: 2,
+          gap: 2,
+          overflow: "hidden",
+          outline: "none",
+        }}
+      >
+        {error && (
+          <Typography color="error" variant="body2">
+            Error: {error}
+          </Typography>
+        )}
 
-          </Box>
-        </Paper>
-      ) : (
-        <Paper elevation={3} sx={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", opacity: 0.6 }}>
-          <Typography variant="body1">No results yet. Run a query!</Typography>
-        </Paper>
-      )}
+        {results.length > 0 ? (
+          <Paper elevation={3} sx={{ flex: 1 }}>
+            <DataTable columns={columns} data={results} responsive striped />
+          </Paper>
+        ) : (
+          <Paper
+            elevation={3}
+            sx={{
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              opacity: 0.6,
+            }}
+          >
+            <Typography variant="body1">No results yet. Run a query!</Typography>
+          </Paper>
+        )}
+      </Box>
     </Box>
-  </Box>
-);
-
+  );
 }

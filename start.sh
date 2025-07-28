@@ -23,3 +23,9 @@ tell application "iTerm2"
   end tell
 end tell
 EOF
+
+# Wait a few seconds for the React dev server to start
+sleep 5
+
+# Open the app in the default browser
+open "http://localhost:5173/"
