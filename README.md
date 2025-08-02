@@ -13,12 +13,3 @@ Lists all tables and columns in the current database.
 
 Clean Query/Handler Pattern
 Keeps controllers thin with reusable query handlers.
-
-Consistent Response Format
-All API responses include success/error handling.
-
-Swagger UI
-Easily test API endpoints in your browser.
-
-CORS Ready
-Works seamlessly with a Vite + React frontend.
