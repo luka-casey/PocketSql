@@ -21,7 +21,13 @@ public class ExecuteQueryHandler
             if (string.IsNullOrWhiteSpace(sql))
                 return SqlQueryResult.Fail("SQL query cannot be empty.");
 
-            await using var conn = new MySqlConnection(_connectionString);
+            var builder = new MySqlConnectionStringBuilder(_connectionString)
+            {
+                Database = query.Request.DatabaseName
+            };
+
+            await using var conn = new MySqlConnection(builder.ConnectionString);
+            
             await conn.OpenAsync();
 
             if (sql.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))

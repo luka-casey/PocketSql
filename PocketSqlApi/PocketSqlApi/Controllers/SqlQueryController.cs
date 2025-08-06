@@ -25,10 +25,10 @@ public class SqlQueryController : ControllerBase
     }
 
     [HttpGet("schema")]
-    public async Task<IActionResult> GetSchema()
+    public async Task<IActionResult> GetSchema(string database)
     {
         var result = await new GetSchemaQueryHandler(_config.GetConnectionString("Default"))
-            .Handle(new GetSchemaQuery());
+            .Handle(new GetSchemaQuery(database));
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
     

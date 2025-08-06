@@ -17,10 +17,27 @@ export function SqlEditor() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const databases = ["HR", "Production", "Sales"];
+  const [selectedDb, setSelectedDb] = useState(databases[0]);
+
   const [columns, setColumns] = useState<TableColumn<any>[]>([]);
 
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    console.log("Selected DB changed to:", event.target.value);
+    setSelectedDb(event.target.value);
+
+    fetchSchema(event.target.value)
+      .then((data) => {
+        setSchema(data);
+        schemaRef.current = data;
+      })
+      .catch((error) => console.error("Error fetching schema:", error));
+
+      console.log(event.target.value)
+  };
+
   useEffect(() => {
-    fetchSchema()
+    fetchSchema(selectedDb)
       .then((data) => {
         setSchema(data);
         schemaRef.current = data;
@@ -52,8 +69,10 @@ export function SqlEditor() {
     setLoading(true);
     setError(null);
 
+    console.log("Running query with selectedDb =", selectedDb);
+
     try {
-      const data = await executeQuery({ Sql: currentSql });
+      const data = await executeQuery({ Sql: currentSql, DatabaseName: selectedDb });
       console.log("SQL Results:", data);
 
       const freshRows = data.map((row: any) => ({ ...row }));
@@ -134,7 +153,7 @@ export function SqlEditor() {
         color: "white",
       }}
     >
-      {/* LEFT COLUMN - SQL Editor */}
+      {/* LEFT COLUMN - SQL Editor and DB Selector */}
       <Box
         sx={{
           flex: 1,
@@ -145,6 +164,31 @@ export function SqlEditor() {
           overflow: "hidden",
         }}
       >
+        {/* Plain HTML select replacing MUI Select */}
+        <label htmlFor="db-select" style={{ color: "white", marginBottom: 4 }}>
+          Database
+        </label>
+        <select
+          id="db-select"
+          value={selectedDb}
+          onChange={handleChange}
+          style={{
+            backgroundColor: "black",
+            color: "white",
+            padding: "6px 8px",
+            borderRadius: 4,
+            border: "1px solid white",
+            width: "100%",
+            marginBottom: 12,
+          }}
+        >
+          {databases.map((db) => (
+            <option key={db} value={db}>
+              {db}
+            </option>
+          ))}
+        </select>
+
         <Paper
           elevation={3}
           sx={{ flex: 1, display: "flex", flexDirection: "column" }}
@@ -170,10 +214,25 @@ export function SqlEditor() {
           color="grey.400"
           sx={{ mt: 1, userSelect: "none", fontStyle: "italic" }}
         >
-          Use <code>Shift+Enter</code> to run the
-          query. Use <code>Shift+Tab</code> to switch focus between editor and
-          results.
+          Use <code>Shift+Enter</code> to run the query. Use <code>Shift+Tab</code>{" "}
+          to switch focus between editor and results.
         </Typography>
+
+        <button
+          onClick={handleRunClick}
+          style={{
+            marginTop: 12,
+            padding: "8px 16px",
+            borderRadius: 4,
+            border: "none",
+            backgroundColor: "#1976d2",
+            color: "white",
+            cursor: "pointer",
+            alignSelf: "flex-start",
+          }}
+        >
+          Run Query
+        </button>
       </Box>
 
       {/* RIGHT COLUMN - Results */}

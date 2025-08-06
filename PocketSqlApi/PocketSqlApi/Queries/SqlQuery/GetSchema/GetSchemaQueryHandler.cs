@@ -21,7 +21,13 @@ public class GetSchemaQueryHandler
     {
         try
         {
-            await using var conn = new MySqlConnection(_connectionString);
+            var builder = new MySqlConnectionStringBuilder(_connectionString)
+            {
+                Database = query.Database
+            };
+
+            await using var conn = new MySqlConnection(builder.ConnectionString);
+            
             await conn.OpenAsync();
 
             // Get table names

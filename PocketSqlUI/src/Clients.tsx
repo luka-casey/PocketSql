@@ -3,12 +3,15 @@ import type { TableSchema } from "./Interfaces";
 
 const API_BASE = "http://localhost:5270/api/sqlquery";
 
-export async function fetchSchema(): Promise<TableSchema[]> {
-  const response = await axios.get<TableSchema[]>(`${API_BASE}/schema`);
+export async function fetchSchema(Database: string): Promise<TableSchema[]> {
+  const response = await axios.get<TableSchema[]>(`${API_BASE}/schema`, {
+    params: { database: Database }
+  });
   return response.data;
 }
 
-export async function executeQuery(request: { Sql: string }): Promise<any> {
+
+export async function executeQuery(request: { Sql: string, DatabaseName: string }): Promise<any> {
   try {
     const response = await axios.post(`${API_BASE}/execute`, request, {
       headers: {
