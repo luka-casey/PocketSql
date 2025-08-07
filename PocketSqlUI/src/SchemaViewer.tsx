@@ -30,12 +30,12 @@ export function SchemaViewer({ database }: SchemaViewerProps) {
     }
   }, [database]);
 
-  if (loading) return <p>Loading schema...</p>;
-  if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
+  //if (loading) return <p>Loading schema...</p>;
+  //if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
   return (
     <div>
-      <h2>Database Schema: {database}</h2>
+      {/* <h2>Database Schema: {database}</h2>
       {schema.map((table) => (
         <div key={table.table} style={{ marginBottom: "1rem" }}>
           <h3>{table.table}</h3>
@@ -47,7 +47,7 @@ export function SchemaViewer({ database }: SchemaViewerProps) {
             ))}
           </ul>
         </div>
-      ))}
+      ))} */}
     </div>
   );
 }

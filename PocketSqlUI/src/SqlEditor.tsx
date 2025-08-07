@@ -17,23 +17,16 @@ export function SqlEditor() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const databases = ["HR", "Production", "Sales"];
+  const databases = ["HR", "Production", "Sales", "Stats"];
   const [selectedDb, setSelectedDb] = useState(databases[0]);
+  const selectedDbRef = useRef(databases[0]); // ✅ hold latest DB value for closures
 
   const [columns, setColumns] = useState<TableColumn<any>[]>([]);
 
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    console.log("Selected DB changed to:", event.target.value);
-    setSelectedDb(event.target.value);
-
-    fetchSchema(event.target.value)
-      .then((data) => {
-        setSchema(data);
-        schemaRef.current = data;
-      })
-      .catch((error) => console.error("Error fetching schema:", error));
-
-      console.log(event.target.value)
+    const newDb = event.target.value;
+    setSelectedDb(newDb);
+    selectedDbRef.current = newDb; // ✅ update ref
   };
 
   useEffect(() => {
@@ -43,7 +36,9 @@ export function SqlEditor() {
         schemaRef.current = data;
       })
       .catch((error) => console.error("Error fetching schema:", error));
-  }, []);
+
+    selectedDbRef.current = selectedDb; // ✅ ensure it's always current
+  }, [selectedDb]);
 
   useEffect(() => {
     if (results.length > 0) {
@@ -69,13 +64,15 @@ export function SqlEditor() {
     setLoading(true);
     setError(null);
 
-    console.log("Running query with selectedDb =", selectedDb);
+    console.log("Running query with selectedDb =", selectedDbRef.current); // ✅ always correct
 
     try {
-      const data = await executeQuery({ Sql: currentSql, DatabaseName: selectedDb });
-      console.log("SQL Results:", data);
+      const data = await executeQuery({
+        Sql: currentSql,
+        DatabaseName: selectedDbRef.current,
+      });
 
-      const freshRows = data.map((row: any) => ({ ...row }));
+      const freshRows = Array.isArray(data) ? data.map((row: any) => ({ ...row })) : [];
       setResults(freshRows);
     } catch (err: any) {
       setError(err.message || "Unknown error");
@@ -86,6 +83,8 @@ export function SqlEditor() {
 
   const handleEditorMount: OnMount = (editor, monacoInstance) => {
     editorRef.current = editor;
+    editor.focus();
+
     if (!monacoInstance) return;
 
     try {
@@ -96,6 +95,11 @@ export function SqlEditor() {
       triggerCharacters: [" ", "."],
       provideCompletionItems: (model, position) => {
         const suggestions: monaco.languages.CompletionItem[] = [];
+
+        if (!schemaRef.current || schemaRef.current.length === 0) {
+          return { suggestions: [] };
+        }
+
         const word = model.getWordUntilPosition(position);
         const range: monaco.IRange = {
           startLineNumber: position.lineNumber,
@@ -110,6 +114,7 @@ export function SqlEditor() {
             kind: monaco.languages.CompletionItemKind.Class,
             insertText: table.table,
             detail: "Table",
+            documentation: `Table: ${table.table}`,
             range,
           });
 
@@ -119,6 +124,7 @@ export function SqlEditor() {
               kind: monaco.languages.CompletionItemKind.Field,
               insertText: col.columnName,
               detail: `${col.dataType} (Column of ${table.table})`,
+              documentation: `Column: ${col.columnName} (${col.dataType})`,
               range,
             });
           });
@@ -131,7 +137,7 @@ export function SqlEditor() {
     editor.addCommand(
       monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Enter,
       () => {
-        handleRunClick();
+        handleRunClick(); // ✅ will always use latest selectedDbRef
       }
     );
 
@@ -153,7 +159,7 @@ export function SqlEditor() {
         color: "white",
       }}
     >
-      {/* LEFT COLUMN - SQL Editor and DB Selector */}
+      {/* LEFT COLUMN */}
       <Box
         sx={{
           flex: 1,
@@ -164,7 +170,6 @@ export function SqlEditor() {
           overflow: "hidden",
         }}
       >
-        {/* Plain HTML select replacing MUI Select */}
         <label htmlFor="db-select" style={{ color: "white", marginBottom: 4 }}>
           Database
         </label>
@@ -189,13 +194,11 @@ export function SqlEditor() {
           ))}
         </select>
 
-        <Paper
-          elevation={3}
-          sx={{ flex: 1, display: "flex", flexDirection: "column" }}
-        >
+        <Paper elevation={3} sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Editor
-            defaultLanguage="sql"
-            defaultValue={sqlValue}
+            value={sqlValue}
+            onChange={(value) => setSqlValue(value ?? "")}
+            language="sql"
             theme="vs-dark"
             onMount={handleEditorMount}
             height="100%"
@@ -208,7 +211,6 @@ export function SqlEditor() {
           />
         </Paper>
 
-        {/* Keyboard shortcut info */}
         <Typography
           variant="body2"
           color="grey.400"
@@ -220,6 +222,7 @@ export function SqlEditor() {
 
         <button
           onClick={handleRunClick}
+          disabled={loading}
           style={{
             marginTop: 12,
             padding: "8px 16px",
@@ -229,13 +232,15 @@ export function SqlEditor() {
             color: "white",
             cursor: "pointer",
             alignSelf: "flex-start",
+            opacity: loading ? 0.6 : 1,
+            pointerEvents: loading ? "none" : "auto",
           }}
         >
-          Run Query
+          {loading ? "Running..." : "Run Query"}
         </button>
       </Box>
 
-      {/* RIGHT COLUMN - Results */}
+      {/* RIGHT COLUMN */}
       <Box
         ref={dataTableRef}
         tabIndex={0}
@@ -276,7 +281,9 @@ export function SqlEditor() {
               opacity: 0.6,
             }}
           >
-            <Typography variant="body1">No results yet. Run a query!</Typography>
+            <Typography variant="body1" sx={{ color: "#ccc" }}>
+              No results yet. Run a query!
+            </Typography>
           </Paper>
         )}
       </Box>
