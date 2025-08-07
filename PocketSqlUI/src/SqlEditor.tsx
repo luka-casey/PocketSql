@@ -170,9 +170,6 @@ export function SqlEditor() {
           overflow: "hidden",
         }}
       >
-        <label htmlFor="db-select" style={{ color: "white", marginBottom: 4 }}>
-          Database
-        </label>
         <select
           id="db-select"
           value={selectedDb}
