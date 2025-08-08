@@ -216,25 +216,6 @@ export function SqlEditor() {
           Use <code>Shift+Enter</code> to run the query. Use <code>Shift+Tab</code>{" "}
           to switch focus between editor and results.
         </Typography>
-
-        <button
-          onClick={handleRunClick}
-          disabled={loading}
-          style={{
-            marginTop: 12,
-            padding: "8px 16px",
-            borderRadius: 4,
-            border: "none",
-            backgroundColor: "#1976d2",
-            color: "white",
-            cursor: "pointer",
-            alignSelf: "flex-start",
-            opacity: loading ? 0.6 : 1,
-            pointerEvents: loading ? "none" : "auto",
-          }}
-        >
-          {loading ? "Running..." : "Run Query"}
-        </button>
       </Box>
 
       {/* RIGHT COLUMN */}
@@ -264,8 +245,21 @@ export function SqlEditor() {
         )}
 
         {results.length > 0 ? (
-          <Paper elevation={3} sx={{ flex: 1 }}>
-            <DataTable columns={columns} data={results} responsive striped />
+          <Paper
+            elevation={3}
+            sx={{
+              flex: 1,
+              overflowY: "auto", // ✅ make scrollable
+              maxHeight: "calc(100vh - 100px)", // ✅ adjust as needed
+            }}
+          >
+            <DataTable
+              columns={columns}
+              data={results}
+              responsive
+              striped
+              dense // optional: more compact rows
+            />
           </Paper>
         ) : (
           <Paper
