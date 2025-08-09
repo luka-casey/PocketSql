@@ -12,4 +12,4 @@ Fetch Database Schema
 Lists all tables and columns in the current database.
 
 Clean Query/Handler Pattern
-Keeps controllers thin with reusable query handlers
+Keeps controllers thin with reusable query handlers.
