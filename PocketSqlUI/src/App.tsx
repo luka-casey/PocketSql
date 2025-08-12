@@ -1,10 +1,8 @@
-import { SchemaViewer } from "./SchemaViewer";
-import { SqlEditor } from "./SqlEditor";
+import { SqlEditor } from "./components/SqlEditor";
 
 function App() {
   return (
     <div>
-      <SchemaViewer />
       <SqlEditor />
     </div>
   );

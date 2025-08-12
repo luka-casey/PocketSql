@@ -27,16 +27,18 @@ public class ExecuteQueryHandler
             };
 
             await using var conn = new MySqlConnection(builder.ConnectionString);
-            
             await conn.OpenAsync();
 
-            if (sql.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))
+            // Try running as a query first
+            var rows = (await conn.QueryAsync(sql)).ToList();
+
+            if (rows.Any())
             {
-                var rows = await conn.QueryAsync(sql);
                 return SqlQueryResult.Ok(rows);
             }
             else
             {
+                // If no result rows, run as a command to get rowsAffected
                 var affected = await conn.ExecuteAsync(sql);
                 return SqlQueryResult.Ok(new
                 {
@@ -54,4 +56,5 @@ public class ExecuteQueryHandler
             return SqlQueryResult.Fail(ex.Message);
         }
     }
+
 }
