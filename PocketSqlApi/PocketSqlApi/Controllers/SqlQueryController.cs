@@ -31,5 +31,7 @@ public class SqlQueryController : ControllerBase
             .Handle(new GetSchemaQuery(database));
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
+
+    //TODO - Create an endpoint that gets all non-system databases 
     
 }
