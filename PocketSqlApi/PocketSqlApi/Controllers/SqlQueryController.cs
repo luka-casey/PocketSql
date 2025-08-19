@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PocketSqlApi.Models;
 using PocketSqlApi.Queries.SqlQuery.Execute;
+using PocketSqlApi.Queries.SqlQuery.GetDatabases;
 using PocketSqlApi.Queries.SqlQuery.GetSchema;
 
 namespace PocketSqlApi.Controllers;
@@ -29,6 +30,14 @@ public class SqlQueryController : ControllerBase
     {
         var result = await new GetSchemaQueryHandler(_config.GetConnectionString("Default"))
             .Handle(new GetSchemaQuery(database));
+        return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
+    }
+    
+    [HttpGet("databases")]
+    public async Task<IActionResult> GetDatabases()
+    {
+        var result = await new GetDatabasesQueryHandler(_config.GetConnectionString("Default"))
+            .Handle();
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
     
