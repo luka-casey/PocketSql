@@ -4,6 +4,7 @@ interface DatabaseDropdownProps {
     databases: string[];
 }
 
+//Eventually needs to hit an API that retreaves a list of databases.
 export function DatabaseDropdown(props: DatabaseDropdownProps) {
   return (
     <select
