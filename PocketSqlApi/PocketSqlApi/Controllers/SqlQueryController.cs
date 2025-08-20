@@ -33,8 +33,6 @@ public class SqlQueryController : ControllerBase
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
 
-    //TODO - Create an endpoint that gets all non-system databases 
-    
     [HttpGet("databases")]
     public async Task<IActionResult> GetDatabases()
     {

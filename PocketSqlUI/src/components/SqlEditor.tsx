@@ -17,7 +17,7 @@ export function SqlEditor() {
   const [sqlValue, setSqlValue] = useState<string>("SELECT * FROM ");
   const [results, setResults] = useState<Record<string, any>[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const databases = ["HR", "Production", "Sales", "Stats"];
+  const [databases, setDatabases] = useState<string[]>([]);
   const [selectedDb, setSelectedDb] = useState<string>(databases[0]);
   const selectedDbRef = useRef<string>(databases[0]);
   const [columns, setColumns] = useState<TableColumn<Record<string, any>>[]>([]);
@@ -179,7 +179,7 @@ export function SqlEditor() {
           overflow: "hidden",
         }}
       >
-        <DatabaseDropdown selectedDb={selectedDb} handleChange={handleChange} databases={databases} />
+        <DatabaseDropdown selectedDb={selectedDb} handleChange={handleChange} databases={databases} setDatabases={setDatabases} />
 
         <Paper elevation={3} sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Editor
