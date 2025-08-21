@@ -151,6 +151,7 @@ export function SqlEditor() {
       }
     );
 
+// TODO: Currently doesn't work. Need to fix 
     editor.onKeyDown((e) => {
       if (e.shiftKey && e.browserEvent.key === "Tab") {
         e.preventDefault();
