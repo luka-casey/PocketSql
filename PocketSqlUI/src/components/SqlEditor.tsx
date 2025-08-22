@@ -101,7 +101,7 @@ export function SqlEditor() {
 
     try {
       monacoInstance.languages.register({ id: "sql" });
-    } catch {}
+    } catch { }
 
     monacoInstance.languages.registerCompletionItemProvider("sql", {
       triggerCharacters: [" ", "."],
@@ -151,7 +151,7 @@ export function SqlEditor() {
       }
     );
 
-// TODO: Currently doesn't work. Need to fix 
+    // TODO: Currently doesn't work. Need to fix 
     editor.onKeyDown((e) => {
       if (e.shiftKey && e.browserEvent.key === "Tab") {
         e.preventDefault();
@@ -160,6 +160,7 @@ export function SqlEditor() {
     });
   };
 
+  
   return (
     <Box
       sx={{
@@ -207,12 +208,12 @@ export function SqlEditor() {
           Use <code>Shift+Enter</code> to run the query. Use <code>Shift+Tab</code> to switch focus between editor and results.
         </Typography>
       </Box>
-        <SqlResults 
-          columns={columns} 
-          error={error} 
-          editorRef={editorRef} 
-          results={results}
-        />
+      <SqlResults
+        columns={columns}
+        error={error}
+        editorRef={editorRef}
+        results={results}
+      />
     </Box>
   );
 }
