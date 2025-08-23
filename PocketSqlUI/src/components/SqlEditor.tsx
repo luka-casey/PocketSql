@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 import type { OnMount } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import type { TableSchema, ColumnInfo, SqlQueryRequest, ExecuteQueryErrorResponse } from "../Interfaces";
-import { fetchSchema, executeQuery } from "../Clients";
 import { Box, Paper, Typography } from "@mui/material";
-import { type TableColumn } from "react-data-table-component";
+import type { TableColumn } from "react-data-table-component";
+import { fetchSchema, executeQuery } from "../Clients";
+import type { TableSchema, ColumnInfo, SqlQueryRequest, ExecuteQueryErrorResponse } from "../Interfaces";
 import { SqlResults } from "./SqlResults";
 import { DatabaseDropdown } from "./DatabaseDropdown";
 
@@ -18,78 +18,62 @@ export function SqlEditor() {
   const [results, setResults] = useState<Record<string, any>[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [databases, setDatabases] = useState<string[]>([]);
-  const [selectedDb, setSelectedDb] = useState<string>(databases[0]);
-  const selectedDbRef = useRef<string>(databases[0]);
+  const [selectedDb, setSelectedDb] = useState<string>("");
+  const selectedDbRef = useRef<string>("");
   const [columns, setColumns] = useState<TableColumn<Record<string, any>>[]>([]);
-
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
-    const newDb = event.target.value;
-    setSelectedDb(newDb);
-    selectedDbRef.current = newDb;
-  };
-
-  const loadSchema = async (dbName: string): Promise<void> => {
-    try {
-      const data: TableSchema[] = await fetchSchema(dbName);
-      schemaRef.current = data;
-    } catch (error) {
-      console.error("Error fetching schema:", error);
-    }
-  };
 
   useEffect(() => {
     selectedDbRef.current = selectedDb;
-    loadSchema(selectedDb);
+    if (selectedDb) loadSchema(selectedDb);
+    else schemaRef.current = [];
   }, [selectedDb]);
 
-  const updateColumnsFromResults = (rows: Record<string, any>[]): void => {
-    if (rows.length > 0) {
-      const dynamicColumns: TableColumn<Record<string, any>>[] = Object.keys(rows[0]).map(
-        (key) => ({
-          name: key,
-          selector: (row: Record<string, any>) => row[key],
-          sortable: true,
-          wrap: true,
-        })
-      );
-      setColumns(dynamicColumns);
-    } else {
-      setColumns([]);
+  const loadSchema = async (dbName: string) => {
+    try {
+      const data = await fetchSchema(dbName);
+      schemaRef.current = data ?? [];
+    } catch (err) {
+      console.error("fetchSchema failed", err);
+      schemaRef.current = [];
     }
   };
 
   useEffect(() => {
-    updateColumnsFromResults(results);
+    if (results.length > 0) {
+      const dynamic: TableColumn<Record<string, any>>[] = Object.keys(results[0]).map((k) => ({
+        name: k,
+        selector: (r: Record<string, any>) => r[k],
+        sortable: true,
+        wrap: true,
+      }));
+      setColumns(dynamic);
+    } else {
+      setColumns([]);
+    }
   }, [results]);
 
-  const handleRunClick = async (): Promise<void> => {
+  const handleRunClick = async () => {
     if (!editorRef.current) return;
-
-    const currentSql: string = editorRef.current.getValue();
-
-    console.log(currentSql);
-
+    const currentSql = editorRef.current.getValue();
     setSqlValue(currentSql);
     setError(null);
 
-    const request: SqlQueryRequest = {
-      Sql: currentSql,
-      DatabaseName: selectedDbRef.current,
-    };
+    if (!selectedDbRef.current) {
+      setError("Please select a database before running the query.");
+      return;
+    }
+
+    const request: SqlQueryRequest = { Sql: currentSql, DatabaseName: selectedDbRef.current };
+    console.log("Executing SQL request payload:", request);
 
     try {
       const data = await executeQuery(request);
-      // If executeQuery can throw or return error, handle accordingly
-      // Assume it returns array or throws; adjust if executeQuery returns error object instead
-      const freshRows = Array.isArray(data) ? data.map((row: Record<string, any>) => ({ ...row })) : [];
+      const freshRows = Array.isArray(data) ? data.map((r: Record<string, any>) => ({ ...r })) : [];
       setResults(freshRows);
     } catch (err: any) {
-      // Check if err matches your ExecuteQueryErrorResponse structure
-      if (err && typeof err === "object" && "error" in err) {
-        setError((err as ExecuteQueryErrorResponse).error);
-      } else {
-        setError(err.message || "Unknown error");
-      }
+      console.error("executeQuery error:", err);
+      if (err && typeof err === "object" && "error" in err) setError((err as ExecuteQueryErrorResponse).error);
+      else setError(err?.message ?? "Unknown error");
     }
   };
 
@@ -97,17 +81,12 @@ export function SqlEditor() {
     editorRef.current = editor;
     editor.focus();
 
-    if (!monacoInstance) return;
-
-    try {
-      monacoInstance.languages.register({ id: "sql" });
-    } catch { }
+    try { monacoInstance.languages.register({ id: "sql" }); } catch {}
 
     monacoInstance.languages.registerCompletionItemProvider("sql", {
       triggerCharacters: [" ", "."],
       provideCompletionItems: (model, position) => {
         if (!schemaRef.current.length) return { suggestions: [] };
-
         const word = model.getWordUntilPosition(position);
         const range: monaco.IRange = {
           startLineNumber: position.lineNumber,
@@ -115,10 +94,8 @@ export function SqlEditor() {
           startColumn: word.startColumn,
           endColumn: word.endColumn,
         };
-
         const suggestions: monaco.languages.CompletionItem[] = [];
-
-        schemaRef.current.forEach((table: TableSchema) => {
+        schemaRef.current.forEach((table) => {
           suggestions.push({
             label: table.table,
             kind: monaco.languages.CompletionItemKind.Class,
@@ -127,7 +104,6 @@ export function SqlEditor() {
             documentation: `Table: ${table.table}`,
             range,
           });
-
           table.columns.forEach((col: ColumnInfo) => {
             suggestions.push({
               label: `${table.table}.${col.columnName}`,
@@ -139,81 +115,60 @@ export function SqlEditor() {
             });
           });
         });
-
         return { suggestions };
       },
     });
 
-    editor.addCommand(
-      monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Enter,
-      () => {
-        handleRunClick();
-      }
-    );
+    // Shift + Enter => run query
+    editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Enter, () => {
+      handleRunClick();
+    });
 
-    // TODO: Currently doesn't work. Need to fix 
-    editor.onKeyDown((e) => {
-      if (e.shiftKey && e.browserEvent.key === "Tab") {
-        e.preventDefault();
-        dataTableRef.current?.focus();
-      }
+    // Shift + Tab => move focus to results container
+    editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Tab, () => {
+      try { editor.blur(); } catch {}
+      // small timeout to let blur settle in some browsers
+      setTimeout(() => dataTableRef.current?.focus(), 0);
     });
   };
 
-  
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "row",
-        height: "100vh",
-        bgcolor: "#121212",
-        color: "white",
-      }}
-    >
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          p: 2,
-          gap: 1,
-          overflow: "hidden",
-        }}
-      >
-        <DatabaseDropdown selectedDb={selectedDb} handleChange={handleChange} databases={databases} setDatabases={setDatabases} />
+    <Box sx={{ display: "flex", flexDirection: "row", height: "100vh", bgcolor: "#121212", color: "white" }}>
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", p: 2, gap: 1, overflow: "hidden" }}>
+        <DatabaseDropdown
+          selectedDb={selectedDb}
+          handleChange={(e) => setSelectedDb(e.target.value)}
+          databases={databases}
+          setDatabases={setDatabases}
+          setSelectedDb={setSelectedDb}
+        />
 
         <Paper elevation={3} sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Editor
             value={sqlValue}
-            onChange={(value) => setSqlValue(value ?? "")}
+            onChange={(val) => setSqlValue(val ?? "")}
             language="sql"
             theme="vs-dark"
             onMount={handleEditorMount}
             height="100%"
-            options={{
-              wordWrap: "on",
-              minimap: { enabled: false },
-              scrollBeyondLastLine: false,
-              fontSize: 14,
-            }}
+            options={{ wordWrap: "on", minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 14 }}
           />
         </Paper>
 
-        <Typography
-          variant="body2"
-          color="grey.400"
-          sx={{ mt: 1, userSelect: "none", fontStyle: "italic" }}
-        >
+        <Typography variant="body2" color="grey.400" sx={{ mt: 1, userSelect: "none", fontStyle: "italic" }}>
           Use <code>Shift+Enter</code> to run the query. Use <code>Shift+Tab</code> to switch focus between editor and results.
         </Typography>
       </Box>
+
       <SqlResults
         columns={columns}
         error={error}
         editorRef={editorRef}
         results={results}
+        dataTableRef={dataTableRef} // <-- pass the ref so editor can focus it
       />
     </Box>
   );
 }
+
+export default SqlEditor;

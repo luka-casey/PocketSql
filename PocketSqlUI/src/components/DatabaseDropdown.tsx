@@ -1,30 +1,39 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { getDatabases } from "../Clients";
 
 interface DatabaseDropdownProps {
-    selectedDb: string
-    handleChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-    databases: string[];
-    setDatabases: React.Dispatch<React.SetStateAction<string[]>>;
+  selectedDb: string;
+  handleChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  databases: string[];
+  setDatabases: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedDb?: React.Dispatch<React.SetStateAction<string>>;
 }
 
-//Eventually needs to hit an API that retreaves a list of databases.
 export function DatabaseDropdown(props: DatabaseDropdownProps) {
-    useEffect(() => {
-      const fetchDatabases = async (): Promise<void> => {
-        const data: string[] = await getDatabases();
-        props.setDatabases(data)
+  useEffect(() => {
+    const fetchDatabases = async (): Promise<void> => {
+      try {
+        const data = await getDatabases();
+        props.setDatabases(data ?? []);
+        if (data && data.length > 0 && (!props.selectedDb || props.selectedDb.length === 0)) {
+          props.setSelectedDb?.(data[0]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch databases:", err);
+        props.setDatabases([]);
       }
-      
-      fetchDatabases();
-    }, []);
+    };
+
+    fetchDatabases();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <select
-        id="db-select"
-        value={props.selectedDb}
-        onChange={props.handleChange}
-        style={{
+      id="db-select"
+      value={props.selectedDb ?? ""}
+      onChange={props.handleChange}
+      style={{
         backgroundColor: "black",
         color: "white",
         padding: "6px 8px",
@@ -32,13 +41,18 @@ export function DatabaseDropdown(props: DatabaseDropdownProps) {
         border: "1px solid white",
         width: "100%",
         marginBottom: 12,
-        }}
+      }}
     >
-        {props.databases.map((db) => (
+      <option value="" disabled>
+        Select a database
+      </option>
+      {props.databases.map((db) => (
         <option key={db} value={db}>
-            {db}
+          {db}
         </option>
-        ))}
+      ))}
     </select>
   );
 }
+
+export default DatabaseDropdown;
