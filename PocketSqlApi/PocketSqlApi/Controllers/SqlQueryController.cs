@@ -40,5 +40,9 @@ public class SqlQueryController : ControllerBase
             .Handle();
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
+
+//TODO Create a endpoint that saves a file to a db as text 
+
+//TODO Create a endpoint that loads a file from a db
     
 }
