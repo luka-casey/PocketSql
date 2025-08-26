@@ -42,7 +42,6 @@ public class SqlQueryController : ControllerBase
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
 
-//TODO Create a endpoint that saves a file to a db as text 
     [HttpPost("uploadFile")]
     public async Task<IActionResult> UploadFile([FromBody] SqlQueryRequest request)
     {
@@ -50,7 +49,11 @@ public class SqlQueryController : ControllerBase
             Handle(new UploadFileCommand(request));
         return Ok();
     }
-
-//TODO Create a endpoint that loads a file from a db
+    
+    //TODO Create a endpoint that loads a file from a db
+    
+    //TODO Create a endpoint that lets you edit an existing file by ID
+    
+    //TODO Create a endpoint that gets all file ID's with their file names 
     
 }
