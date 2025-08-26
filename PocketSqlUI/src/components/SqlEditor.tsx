@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 import type { OnMount } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Paper, Typography, Button } from "@mui/material";
 import type { TableColumn } from "react-data-table-component";
-import { fetchSchema, executeQuery } from "../Clients";
+import { fetchSchema, executeQuery, UploadFile } from "../Clients";
 import type { TableSchema, ColumnInfo, SqlQueryRequest, ExecuteQueryErrorResponse } from "../Interfaces";
 import { SqlResults } from "./SqlResults";
 import { DatabaseDropdown } from "./DatabaseDropdown";
@@ -126,23 +126,61 @@ export function SqlEditor() {
 
     // Shift + Tab => move focus to results container
     editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Tab, () => {
-      try { editor.blur(); } catch {}
-      // small timeout to let blur settle in some browsers
       setTimeout(() => dataTableRef.current?.focus(), 0);
     });
+    
   };
+
+  const executeUpload = async(request: SqlQueryRequest) => {
+    try
+    {
+      const data = await UploadFile(request);
+      console.log(request)
+      console.log(data)
+    }
+    catch (err: any) {
+      console.error("executeUpload error:", err);
+      if (err && typeof err === "object" && "error" in err) setError((err as ExecuteQueryErrorResponse).error);
+      else setError(err?.message ?? "Unknown error");
+    }
+  }
+
 
   return (
     <Box sx={{ display: "flex", flexDirection: "row", height: "100vh", bgcolor: "#121212", color: "white" }}>
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", p: 2, gap: 1, overflow: "hidden" }}>
-        <DatabaseDropdown
-          selectedDb={selectedDb}
-          handleChange={(e) => setSelectedDb(e.target.value)}
-          databases={databases}
-          setDatabases={setDatabases}
-          setSelectedDb={setSelectedDb}
-        />
-
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <DatabaseDropdown
+              selectedDb={selectedDb}
+              handleChange={(e) => setSelectedDb(e.target.value)}
+              databases={databases}
+              setDatabases={setDatabases}
+              setSelectedDb={setSelectedDb}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={!selectedDb || !editorRef.current?.getValue()}
+              onClick={async () => {
+                if (!editorRef.current) return;
+                const sqlText = editorRef.current.getValue();
+                try {
+                  const payload = {
+                    Sql: sqlText,
+                    DatabaseName: selectedDb
+                  };
+                  const result = await executeUpload(payload); // POST to /uploadFile
+                  //console.log("Upload result:", result);
+                  alert("SQL uploaded successfully");
+                } catch (err) {
+                  console.error(err);
+                  alert("Failed to upload SQL");
+                }
+              }}
+            >
+              Upload SQL
+            </Button>
+        </Box>
         <Paper elevation={3} sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Editor
             value={sqlValue}

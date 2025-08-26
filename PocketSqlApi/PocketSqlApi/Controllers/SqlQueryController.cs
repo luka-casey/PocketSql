@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PocketSqlApi.Commands.SqlFiles.UploadFile;
 using PocketSqlApi.Models;
 using PocketSqlApi.Queries.SqlQuery.Execute;
 using PocketSqlApi.Queries.SqlQuery.GetDatabases;
@@ -42,6 +43,13 @@ public class SqlQueryController : ControllerBase
     }
 
 //TODO Create a endpoint that saves a file to a db as text 
+    [HttpPost("uploadFile")]
+    public async Task<IActionResult> UploadFile([FromBody] SqlQueryRequest request)
+    {
+        await new UploadFileCommandHandler(_config.GetConnectionString("Default")).
+            Handle(new UploadFileCommand(request));
+        return Ok();
+    }
 
 //TODO Create a endpoint that loads a file from a db
     
