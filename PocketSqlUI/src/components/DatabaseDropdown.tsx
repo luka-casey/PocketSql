@@ -25,7 +25,6 @@ export function DatabaseDropdown(props: DatabaseDropdownProps) {
     };
 
     fetchDatabases();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -39,8 +38,7 @@ export function DatabaseDropdown(props: DatabaseDropdownProps) {
         padding: "6px 8px",
         borderRadius: 4,
         border: "1px solid white",
-        width: "100%",
-        marginBottom: 12,
+        width: "200px",
       }}
     >
       <option value="" disabled>

@@ -1,3 +1,4 @@
+// SqlResults.tsx
 import * as monaco from "monaco-editor";
 import { Box, Paper, Typography } from "@mui/material";
 import DataTable, { type TableColumn } from "react-data-table-component";
@@ -8,21 +9,65 @@ interface SqlResultsProps {
   error: string | null;
   editorRef: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
   results: Record<string, any>[];
-  dataTableRef?: React.RefObject<HTMLDivElement | null>; // optional if you still pass it
+  dataTableRef?: React.RefObject<HTMLDivElement | null>; // optional wrapper ref from parent
 }
 
 export function SqlResults(props: SqlResultsProps) {
-  // This is the actual scrollable area inside the panel (the Paper wrapper)
+  // The element that will receive key events and is a good fallback to scroll
   const scrollableRef = useRef<HTMLDivElement | null>(null);
+
+  // The wrapper (outer container) — either provided by parent or local
   const wrapperRef = props.dataTableRef ?? useRef<HTMLDivElement | null>(null);
 
-  // Keyboard handler for wrapper: arrow keys + page/home/end scroll the results
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    const scrollable = scrollableRef.current;
-    if (!wrapper || !scrollable) return;
+  // Helper: find first descendant (or root) that can scroll horizontally (scrollWidth > clientWidth)
+  const findHorizScrollable = (root: HTMLElement | null): HTMLElement | null => {
+    if (!root) return null;
+    // search root first, then children
+    const nodes: HTMLElement[] = [root, ...Array.from(root.querySelectorAll<HTMLElement>("*"))];
+    for (const el of nodes) {
+      try {
+        const style = window.getComputedStyle(el);
+        const overflowX = style.overflowX;
+        // treat 'auto', 'scroll', 'overlay' as scrollable candidates
+        if ((overflowX === "auto" || overflowX === "scroll" || overflowX === "overlay") && el.scrollWidth > el.clientWidth + 1) {
+          return el;
+        }
+        // if overflowX is visible but element still larger than container, it might still scroll on ancestor;
+        // we prefer explicit overflow declarations first.
+      } catch {
+        // ignore cross-origin or other read errors
+      }
+    }
+    // fallback: use provided scrollableRef
+    return scrollableRef.current ?? null;
+  };
 
-    const SCROLL_STEP = 40; // pixels per ArrowUp/ArrowDown press — tweak to taste
+  // Helper: find first descendant that can scroll vertically
+  const findVertScrollable = (root: HTMLElement | null): HTMLElement | null => {
+    if (!root) return null;
+    const nodes: HTMLElement[] = [root, ...Array.from(root.querySelectorAll<HTMLElement>("*"))];
+    for (const el of nodes) {
+      try {
+        const style = window.getComputedStyle(el);
+        const overflowY = style.overflowY;
+        if ((overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") && el.scrollHeight > el.clientHeight + 1) {
+          return el;
+        }
+      } catch {}
+    }
+    return scrollableRef.current ?? null;
+  };
+
+  useEffect(() => {
+    // Attach listener to the wrapper (outer container) so we capture key events from its subtree.
+    const listenerRoot = wrapperRef.current ?? scrollableRef.current;
+    if (!listenerRoot) return;
+
+    // Ensure at least the primary scrollable element is focusable
+    if (scrollableRef.current) scrollableRef.current.tabIndex = 0;
+
+    const V_SCROLL_STEP = 40;  // vertical step
+    const H_SCROLL_STEP = 80;  // horizontal step
 
     const onKeyDown = (e: KeyboardEvent) => {
       // Return focus to editor with Ctrl+Enter
@@ -32,51 +77,89 @@ export function SqlResults(props: SqlResultsProps) {
         return;
       }
 
-      // Only handle navigation keys when wrapper is focused
+      // Identify actual scroll targets at time of key press
+      const horizTarget = findHorizScrollable(listenerRoot as HTMLElement);
+      const vertTarget = findVertScrollable(listenerRoot as HTMLElement);
+
       switch (e.key) {
-        case "ArrowDown":
+        // Horizontal
+        case "ArrowRight": {
           e.preventDefault();
-          scrollable.scrollBy({ top: SCROLL_STEP, behavior: "auto" });
+          const target = horizTarget ?? vertTarget ?? listenerRoot;
+          target?.scrollBy({ left: H_SCROLL_STEP, behavior: "auto" });
           break;
-        case "ArrowUp":
+        }
+        case "ArrowLeft": {
           e.preventDefault();
-          scrollable.scrollBy({ top: -SCROLL_STEP, behavior: "auto" });
+          const target = horizTarget ?? vertTarget ?? listenerRoot;
+          target?.scrollBy({ left: -H_SCROLL_STEP, behavior: "auto" });
           break;
-        case "PageDown":
+        }
+
+        // Vertical
+        case "ArrowDown": {
           e.preventDefault();
-          scrollable.scrollBy({ top: scrollable.clientHeight, behavior: "auto" });
+          const target = vertTarget ?? horizTarget ?? listenerRoot;
+          target?.scrollBy({ top: V_SCROLL_STEP, behavior: "auto" });
           break;
-        case "PageUp":
+        }
+        case "ArrowUp": {
           e.preventDefault();
-          scrollable.scrollBy({ top: -scrollable.clientHeight, behavior: "auto" });
+          const target = vertTarget ?? horizTarget ?? listenerRoot;
+          target?.scrollBy({ top: -V_SCROLL_STEP, behavior: "auto" });
           break;
-        case "Home":
+        }
+        case "PageDown": {
           e.preventDefault();
-          scrollable.scrollTop = 0;
+          const target = vertTarget ?? horizTarget ?? listenerRoot;
+          target?.scrollBy({ top: (target as HTMLElement).clientHeight, behavior: "auto" });
           break;
-        case "End":
+        }
+        case "PageUp": {
           e.preventDefault();
-          scrollable.scrollTop = scrollable.scrollHeight;
+          const target = vertTarget ?? horizTarget ?? listenerRoot;
+          target?.scrollBy({ top: -(target as HTMLElement).clientHeight, behavior: "auto" });
           break;
+        }
+        case "Home": {
+          e.preventDefault();
+          // If Ctrl held, treat as horizontal jump; otherwise vertical top
+          if (e.ctrlKey) {
+            const target = horizTarget ?? scrollableRef.current ?? listenerRoot;
+            if (target) target.scrollLeft = 0;
+          } else {
+            const target = vertTarget ?? scrollableRef.current ?? listenerRoot;
+            if (target) target.scrollTop = 0;
+          }
+          break;
+        }
+        case "End": {
+          e.preventDefault();
+          if (e.ctrlKey) {
+            const target = horizTarget ?? scrollableRef.current ?? listenerRoot;
+            if (target) (target as HTMLElement).scrollLeft = (target as HTMLElement).scrollWidth;
+          } else {
+            const target = vertTarget ?? scrollableRef.current ?? listenerRoot;
+            if (target) (target as HTMLElement).scrollTop = (target as HTMLElement).scrollHeight;
+          }
+          break;
+        }
         default:
-          // don't interfere with other keys (e.g., letters, Ctrl combos)
           break;
       }
     };
 
-    wrapper.addEventListener("keydown", onKeyDown);
-    return () => wrapper.removeEventListener("keydown", onKeyDown);
-  }, [wrapperRef, scrollableRef, props.editorRef]);
+    // Use capture so we see events before potential stopPropagation in children
+    listenerRoot.addEventListener("keydown", onKeyDown, { capture: true });
+    return () => listenerRoot.removeEventListener("keydown", onKeyDown, { capture: true });
+  }, [props.editorRef, wrapperRef, scrollableRef]);
 
-  // Small helper to ensure focus outline styling is handled by MUI sx (we set outline none here)
   return (
     <Box
       ref={wrapperRef}
-      tabIndex={0}
+      tabIndex={-1}
       sx={{
-        width: 520,
-        maxWidth: "40%",
-        flex: "0 0 520px",
+        width: "42%",
         display: "flex",
         flexDirection: "column",
         p: 2,
@@ -88,29 +171,38 @@ export function SqlResults(props: SqlResultsProps) {
       }}
       aria-label="SQL results"
       onKeyDown={(e) => {
-        // Keep this so Shift+Tab can still return to editor quickly if needed.
+        // Keep Shift+Tab behavior to return to editor
         if (e.shiftKey && e.key === "Tab") {
           e.preventDefault();
           props.editorRef.current?.focus();
         }
       }}
     >
-      <Typography variant="h6">Results</Typography>
-
       {props.error && (
         <Typography color="error" variant="body2">
           Error: {props.error}
         </Typography>
       )}
 
-      {/* This is the scrollable area (we attach scrollableRef here) */}
       <Paper
         ref={scrollableRef}
+        tabIndex={0}
         elevation={3}
-        sx={{ flex: 1, overflowY: "auto", maxHeight: "calc(100vh - 140px)" }}
+        sx={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "auto", // allow horizontal scrolling
+          //maxHeight: "calc(100vh - 140px)",
+        }}
       >
         {props.results.length > 0 ? (
-          <DataTable columns={props.columns} data={props.results} responsive striped dense />
+          <DataTable
+            columns={props.columns}
+            data={props.results}
+            responsive
+            striped
+            dense
+          />
         ) : (
           <Box
             sx={{
@@ -128,11 +220,6 @@ export function SqlResults(props: SqlResultsProps) {
           </Box>
         )}
       </Paper>
-
-      <Typography variant="caption" sx={{ display: "block", mt: 1, color: "grey.500" }}>
-        Tip: press <code>Shift+Enter</code> in the editor to run. Click the results panel or press <code>Shift+Tab</code> in the editor
-        to move focus here, then use <code>↑ ↓</code> or <code>PageUp / PageDown</code> to scroll. <code>Ctrl+Enter</code> returns to editor.
-      </Typography>
     </Box>
   );
 }

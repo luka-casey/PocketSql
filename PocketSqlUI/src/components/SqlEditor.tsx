@@ -1,13 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 import type { OnMount } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import { Box, Paper, Typography, Button } from "@mui/material";
+import { Box, Paper } from "@mui/material";
 import type { TableColumn } from "react-data-table-component";
 import { fetchSchema, executeQuery, UploadFile } from "../Clients";
 import type { TableSchema, ColumnInfo, SqlQueryRequest, ExecuteQueryErrorResponse } from "../Interfaces";
 import { SqlResults } from "./SqlResults";
-import { DatabaseDropdown } from "./DatabaseDropdown";
+import Toolbar from "./Toolbar";
+import TreeViewer from "./FileExporer";
+import CollapsibleTreeWithIcons from "./FileExporer";
 
 export function SqlEditor() {
   const schemaRef = useRef<TableSchema[]>([]);
@@ -124,63 +126,70 @@ export function SqlEditor() {
       handleRunClick();
     });
 
-    // Shift + Tab => move focus to results container
+    // Shift + Tab => move focus to results container's focusable element (the scrollable Paper)
     editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Tab, () => {
-      setTimeout(() => dataTableRef.current?.focus(), 0);
+      setTimeout(() => {
+        const wrapper = dataTableRef.current;
+        if (!wrapper) return;
+
+        // prefer focusing the inner element that has tabindex=0 (our scrollable Paper)
+        const focusable = wrapper.querySelector('[tabindex="0"]') as HTMLElement | null;
+        if (focusable) focusable.focus();
+        else wrapper.focus();
+      }, 0);
     });
-    
   };
 
   const executeUpload = async(request: SqlQueryRequest) => {
-    try
-    {
+    try {
       const data = await UploadFile(request);
-      console.log(request)
-      console.log(data)
-    }
-    catch (err: any) {
+      console.log("UploadFile result:", data);
+      return data;
+    } catch (err: any) {
       console.error("executeUpload error:", err);
       if (err && typeof err === "object" && "error" in err) setError((err as ExecuteQueryErrorResponse).error);
       else setError(err?.message ?? "Unknown error");
+      throw err;
     }
   }
 
+  const treeData = [
+  {
+    id: "1",
+    name: "src",
+    children: [
+      { id: "2", name: "index.tsx", isFile: true },
+      { id: "3", name: "App.tsx", isFile: true },
+      {
+        id: "4",
+        name: "components",
+        children: [
+          { id: "5", name: "Tree.tsx", isFile: true },
+          { id: "6", name: "TreeWithIcons.tsx", isFile: true },
+        ],
+      },
+    ],
+  },
+];
 
   return (
     <Box sx={{ display: "flex", flexDirection: "row", height: "100vh", bgcolor: "#121212", color: "white" }}>
+      
+      <div style={{ display: "flex" }}>
+        <CollapsibleTreeWithIcons data={treeData} />
+      </div>
+
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", p: 2, gap: 1, overflow: "hidden" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <DatabaseDropdown
-              selectedDb={selectedDb}
-              handleChange={(e) => setSelectedDb(e.target.value)}
-              databases={databases}
-              setDatabases={setDatabases}
-              setSelectedDb={setSelectedDb}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              disabled={!selectedDb || !editorRef.current?.getValue()}
-              onClick={async () => {
-                if (!editorRef.current) return;
-                const sqlText = editorRef.current.getValue();
-                try {
-                  const payload = {
-                    Sql: sqlText,
-                    DatabaseName: selectedDb
-                  };
-                  const result = await executeUpload(payload); // POST to /uploadFile
-                  //console.log("Upload result:", result);
-                  alert("SQL uploaded successfully");
-                } catch (err) {
-                  console.error(err);
-                  alert("Failed to upload SQL");
-                }
-              }}
-            >
-              Upload SQL
-            </Button>
-        </Box>
+        <Toolbar
+          selectedDb={selectedDb}
+          setSelectedDb={setSelectedDb}
+          databases={databases}
+          setDatabases={setDatabases}
+          editorRef={editorRef}
+          sqlValue={sqlValue} 
+          executeUpload={executeUpload}
+        />
+
         <Paper elevation={3} sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Editor
             value={sqlValue}
@@ -192,10 +201,6 @@ export function SqlEditor() {
             options={{ wordWrap: "on", minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 14 }}
           />
         </Paper>
-
-        <Typography variant="body2" color="grey.400" sx={{ mt: 1, userSelect: "none", fontStyle: "italic" }}>
-          Use <code>Shift+Enter</code> to run the query. Use <code>Shift+Tab</code> to switch focus between editor and results.
-        </Typography>
       </Box>
 
       <SqlResults
@@ -203,7 +208,7 @@ export function SqlEditor() {
         error={error}
         editorRef={editorRef}
         results={results}
-        dataTableRef={dataTableRef} // <-- pass the ref so editor can focus it
+        dataTableRef={dataTableRef} // <-- pass the wrapper ref so editor can find the inner focusable element
       />
     </Box>
   );
