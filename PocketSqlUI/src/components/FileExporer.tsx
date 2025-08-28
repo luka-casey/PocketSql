@@ -21,7 +21,7 @@ interface CollapsibleTreeProps {
 
 const CollapsibleTreeWithIcons: React.FC<CollapsibleTreeProps> = ({ data }) => {
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
-  const [collapsed, setCollapsed] = useState(false); // sidebar collapsed
+  const [collapsed, setCollapsed] = useState(true); // sidebar collapsed
 
   const toggleNode = (id: string) => {
     const newSet = new Set(openIds);
@@ -80,7 +80,7 @@ const CollapsibleTreeWithIcons: React.FC<CollapsibleTreeProps> = ({ data }) => {
     <div
       style={{
         padding: "10px",
-        width: collapsed ? "40px" : "150px",
+        width: collapsed ? "25px" : "150px",
         transition: "width 0.3s",
         backgroundColor: "#121212",
       }}
