@@ -4,12 +4,12 @@ import type { OnMount } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import { Box, Paper } from "@mui/material";
 import type { TableColumn } from "react-data-table-component";
-import { fetchSchema, executeQuery, UploadFile } from "../Clients";
+import { fetchSchema, executeQuery } from "../clients/SqlQueryClient";
 import type { TableSchema, ColumnInfo, SqlQueryRequest, ExecuteQueryErrorResponse } from "../Interfaces";
 import { SqlResults } from "./SqlResults";
 import Toolbar from "./Toolbar";
-import TreeViewer from "./FileExporer";
 import CollapsibleTreeWithIcons from "./FileExporer";
+import { uploadFile } from "../clients/SqlFileClient";
 
 export function SqlEditor() {
   const schemaRef = useRef<TableSchema[]>([]);
@@ -142,7 +142,7 @@ export function SqlEditor() {
 
   const executeUpload = async(request: SqlQueryRequest) => {
     try {
-      const data = await UploadFile(request);
+      const data = await uploadFile(request);
       console.log("UploadFile result:", data);
       return data;
     } catch (err: any) {

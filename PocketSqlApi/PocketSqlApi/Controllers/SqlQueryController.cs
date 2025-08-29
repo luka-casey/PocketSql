@@ -41,14 +41,6 @@ public class SqlQueryController : ControllerBase
             .Handle();
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
-
-    [HttpPost("uploadFile")]
-    public async Task<IActionResult> UploadFile([FromBody] SqlQueryRequest request)
-    {
-        await new UploadFileCommandHandler(_config.GetConnectionString("Default")).
-            Handle(new UploadFileCommand(request));
-        return Ok();
-    }
     
     //TODO Create a endpoint that loads a file from a db
     

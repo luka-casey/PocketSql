@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { getDatabases } from "../Clients";
+import { getDatabases } from "../clients/SqlQueryClient";
 
 interface DatabaseDropdownProps {
   selectedDb: string;

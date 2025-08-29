@@ -1,0 +1,47 @@
+using Microsoft.AspNetCore.Mvc;
+using PocketSqlApi.Commands.SqlFiles.EditFile;
+using PocketSqlApi.Commands.SqlFiles.UploadFile;
+using PocketSqlApi.Models;
+using PocketSqlApi.Queries.SqlFiles.GetFile;
+
+namespace PocketSqlApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class SqlFileController : ControllerBase
+{
+    private readonly IConfiguration _config;
+    public SqlFileController(IConfiguration config)
+    {
+        _config = config;
+    }
+
+    [HttpPost("uploadFile")]
+    public async Task<IActionResult> UploadFile([FromBody] SqlQueryRequest request)
+    {
+        await new UploadFileCommandHandler(_config.GetConnectionString("Default")).
+            Handle(new UploadFileCommand(request));
+        return Ok();
+    }
+    
+    //TODO Create a endpoint that loads a file from a db
+    [HttpGet("getFile")]
+    public async Task<IActionResult> GetFile(string database, int ID)
+    {
+        var result = await new GetFileQueryHandler(_config.GetConnectionString("Default")).
+            Handle(new GetFileQuery(database, ID));
+        return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
+    }
+    
+    //TODO Create a endpoint that lets you edit an existing file by ID
+    [HttpPatch("editFile")]
+    public async Task<IActionResult> EditFile(string database, int id, string sql)
+    {
+        var result = await new EditFileCommandHandler(_config.GetConnectionString("Default")).
+            Handle(new EditFileCommand(database, id, sql));
+        return Ok();
+    }
+    
+    //TODO Create a endpoint that gets all file ID's with their file names 
+    
+}
