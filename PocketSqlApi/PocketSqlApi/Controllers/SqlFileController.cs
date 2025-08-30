@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using PocketSqlApi.Commands.SqlFiles.EditFile;
 using PocketSqlApi.Commands.SqlFiles.UploadFile;
 using PocketSqlApi.Models;
+using PocketSqlApi.Queries.SqlFiles.GetAllFiles;
 using PocketSqlApi.Queries.SqlFiles.GetFile;
 
 namespace PocketSqlApi.Controllers;
@@ -23,7 +24,7 @@ public class SqlFileController : ControllerBase
             Handle(new UploadFileCommand(request));
         return Ok();
     }
-    
+
     //TODO Create a endpoint that loads a file from a db
     [HttpGet("getFile")]
     public async Task<IActionResult> GetFile(string database, int ID)
@@ -32,7 +33,7 @@ public class SqlFileController : ControllerBase
             Handle(new GetFileQuery(database, ID));
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
-    
+
     //TODO Create a endpoint that lets you edit an existing file by ID
     [HttpPatch("editFile")]
     public async Task<IActionResult> EditFile(string database, int id, string sql)
@@ -41,7 +42,15 @@ public class SqlFileController : ControllerBase
             Handle(new EditFileCommand(database, id, sql));
         return Ok();
     }
-    
-    //TODO Create a endpoint that gets all file ID's with their file names 
-    
+
+    [HttpGet("getAllFiles")]
+    public async Task<IActionResult> GetAllFile()
+    {
+        var handler = new GetAllFilesQueryHandler(_config.GetConnectionString("Default"));
+        var result = await handler.Handle();
+
+        // Return 200 OK with the data
+        return Ok(result);
+    }
+
 }

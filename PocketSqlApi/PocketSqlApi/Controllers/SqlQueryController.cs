@@ -41,11 +41,5 @@ public class SqlQueryController : ControllerBase
             .Handle();
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
-    
-    //TODO Create a endpoint that loads a file from a db
-    
-    //TODO Create a endpoint that lets you edit an existing file by ID
-    
-    //TODO Create a endpoint that gets all file ID's with their file names 
-    
+
 }
