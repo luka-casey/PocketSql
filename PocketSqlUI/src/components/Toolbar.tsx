@@ -11,7 +11,7 @@ export interface ToolbarProps {
   setDatabases: React.Dispatch<React.SetStateAction<string[]>>;
   editorRef: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
   sqlValue: string; // add this
-  executeUpload: (payload: { Sql: string; DatabaseName: string }) => Promise<any>;
+  executeUpload: (payload: { Sql: string, DatabaseName: string, FileName: string }) => Promise<any>;
 }
 
 export function Toolbar({
@@ -43,7 +43,7 @@ export function Toolbar({
         onClick={async () => {
           if (!editorRef.current) return;
           try {
-            await executeUpload({ Sql: sqlValue, DatabaseName: selectedDb });
+            await executeUpload({ Sql: sqlValue, DatabaseName: selectedDb, FileName: "Test" });
             alert("SQL uploaded successfully");
           } catch {
             alert("Failed to upload SQL");

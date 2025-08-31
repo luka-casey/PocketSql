@@ -18,33 +18,31 @@ public class SqlFileController : ControllerBase
     }
 
     [HttpPost("uploadFile")]
-    public async Task<IActionResult> UploadFile([FromBody] SqlQueryRequest request)
+    public async Task<IActionResult> UploadFile(string Sql, string DatabaseName, string FileName)
     {
         await new UploadFileCommandHandler(_config.GetConnectionString("Default")).
-            Handle(new UploadFileCommand(request));
+            Handle(new UploadFileCommand(Sql, DatabaseName, FileName));
         return Ok();
     }
 
-    //TODO Create a endpoint that loads a file from a db
     [HttpGet("getFile")]
-    public async Task<IActionResult> GetFile(string database, int ID)
+    public async Task<SqlFileValueData> GetFile(string database, int ID)
     {
-        var result = await new GetFileQueryHandler(_config.GetConnectionString("Default")).
+        SqlFileValueData result = await new GetFileQueryHandler(_config.GetConnectionString("Default")).
             Handle(new GetFileQuery(database, ID));
-        return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
+        return result;
     }
 
-    //TODO Create a endpoint that lets you edit an existing file by ID
     [HttpPatch("editFile")]
-    public async Task<IActionResult> EditFile(string database, int id, string sql)
+    public async Task<IActionResult> EditFile(string database, int id, string sql, string fileName)
     {
         var result = await new EditFileCommandHandler(_config.GetConnectionString("Default")).
-            Handle(new EditFileCommand(database, id, sql));
+            Handle(new EditFileCommand(database, id, sql, fileName));
         return Ok();
     }
 
     [HttpGet("getAllFiles")]
-    public async Task<IActionResult> GetAllFile()
+    public async Task<IActionResult> GetAllFiles()
     {
         var handler = new GetAllFilesQueryHandler(_config.GetConnectionString("Default"));
         var result = await handler.Handle();

@@ -1,3 +1,4 @@
+using System.Data;
 using Dapper;
 using MySqlConnector;
 using PocketSqlApi.Models;
@@ -13,7 +14,7 @@ public class GetFileQueryHandler
         _connectionString = connectionString;
     }
 
-    public async Task<SqlQueryResult> Handle(GetFileQuery query)
+    public async Task<SqlFileValueData> Handle(GetFileQuery query)
     {
         try
         {
@@ -26,21 +27,27 @@ public class GetFileQueryHandler
             await conn.OpenAsync();
 
             // Fetch the file by ID
-            var sql = "SELECT Id, SqlText FROM SqlFiles WHERE Id = @Id;";
+            var sql = "SELECT Id, SqlText, FileName, CreatedDateTime, ModifiedDateTime FROM SqlFiles WHERE Id = @Id;";
             var file = await conn.QueryFirstOrDefaultAsync(sql, new { Id = query.Id });
 
             if (file == null)
-                return SqlQueryResult.Fail($"File with Id {query.Id} not found");
+                throw new System.Exception($"Cannot find file where Id = {query.Id}");
 
-            return SqlQueryResult.Ok(file);
+            SqlFileValueData sqlFileValueData = new SqlFileValueData
+            {
+                Id = file.Id,
+                SqlText = file.SqlText,
+                FileName = file.FileName,
+                DatabaseName = query.Database,
+                CreatedDateTime = file.CreatedDateTime,
+                ModifiedDateTime = file.ModifiedDateTime
+            };
+
+            return sqlFileValueData;
         }
         catch (MySqlException ex)
         {
-            return SqlQueryResult.Fail(ex.Message, (int)ex.ErrorCode);
-        }
-        catch (Exception ex)
-        {
-            return SqlQueryResult.Fail(ex.Message);
+            throw ex;
         }
     }
 }

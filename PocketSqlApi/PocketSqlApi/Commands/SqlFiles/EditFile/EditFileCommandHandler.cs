@@ -34,7 +34,8 @@ public class EditFileCommandHandler
             var updateCommand = @"
                 UPDATE SqlFiles 
                 SET SqlText = @SqlText,
-                    ModifiedDateTime = @ModifiedDateTime
+                    ModifiedDateTime = @ModifiedDateTime,
+                    FileName = @FileName
                 WHERE Id = @Id;
             ";
 
@@ -42,6 +43,7 @@ public class EditFileCommandHandler
             {
                 SqlText = sqlContent,
                 ModifiedDateTime = DateTime.UtcNow,
+                FileName = command.FileName,
                 Id = command.ID
             });
 

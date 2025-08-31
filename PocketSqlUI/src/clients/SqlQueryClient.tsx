@@ -3,9 +3,9 @@ import type { TableSchema } from "../Interfaces";
 
 const API_BASE = "http://localhost:5270/api/sqlquery";
 
-export async function executeQuery(request: { Sql: string, DatabaseName: string }): Promise<any> {
+export async function ExecuteQuery(request: { DatabaseName: string, SqlQuery: string }): Promise<any> {
   try {
-    const response = await axios.post(`${API_BASE}/execute`, request, {
+    const response = await axios.post(`${API_BASE}/ExecuteQuery`, request, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -22,15 +22,15 @@ export async function executeQuery(request: { Sql: string, DatabaseName: string 
   }
 }
 
-export async function fetchSchema(Database: string): Promise<TableSchema[]> {
-  const response = await axios.get<TableSchema[]>(`${API_BASE}/schema`, {
+export async function GetSchema(Database: string): Promise<TableSchema[]> {
+  const response = await axios.get<TableSchema[]>(`${API_BASE}/GetSchema`, {
     params: { database: Database }
   });
   return response.data;
 }
 
-export async function getDatabases(): Promise<string[]> {
-  const response = await axios.get<string[]>(`${API_BASE}/databases`, {
+export async function GetDatabases(): Promise<string[]> {
+  const response = await axios.get<string[]>(`${API_BASE}/GetDatabases`, {
     params: {}
   });
   return response.data;

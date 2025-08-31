@@ -4,12 +4,12 @@ import type { OnMount } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import { Box, Paper } from "@mui/material";
 import type { TableColumn } from "react-data-table-component";
-import { fetchSchema, executeQuery } from "../clients/SqlQueryClient";
-import type { TableSchema, ColumnInfo, SqlQueryRequest, ExecuteQueryErrorResponse } from "../Interfaces";
+import { GetSchema, ExecuteQuery } from "../clients/SqlQueryClient";
+import type { TableSchema, ColumnInfo, ExecuteQueryErrorResponse } from "../Interfaces";
 import { SqlResults } from "./SqlResults";
 import Toolbar from "./Toolbar";
 import CollapsibleTreeWithIcons from "./FileExporer";
-import { uploadFile } from "../clients/SqlFileClient";
+import { UploadFile } from "../clients/SqlFileClient";
 
 export function SqlEditor() {
   const schemaRef = useRef<TableSchema[]>([]);
@@ -32,10 +32,10 @@ export function SqlEditor() {
 
   const loadSchema = async (dbName: string) => {
     try {
-      const data = await fetchSchema(dbName);
+      const data = await GetSchema(dbName);
       schemaRef.current = data ?? [];
     } catch (err) {
-      console.error("fetchSchema failed", err);
+      console.error("GetSchema failed", err);
       schemaRef.current = [];
     }
   };
@@ -65,11 +65,14 @@ export function SqlEditor() {
       return;
     }
 
-    const request: SqlQueryRequest = { Sql: currentSql, DatabaseName: selectedDbRef.current };
-    console.log("Executing SQL request payload:", request);
+    let sql: string = currentSql;
+    let databaseName: string = selectedDbRef.current;
+
+    const request = { DatabaseName: databaseName,  SqlQuery: sql,  };
+    //console.log("Executing SQL request payload:", request);
 
     try {
-      const data = await executeQuery(request);
+      const data = await ExecuteQuery(request);
       const freshRows = Array.isArray(data) ? data.map((r: Record<string, any>) => ({ ...r })) : [];
       setResults(freshRows);
     } catch (err: any) {
@@ -140,9 +143,9 @@ export function SqlEditor() {
     });
   };
 
-  const executeUpload = async(request: SqlQueryRequest) => {
+  const executeUpload = async(request: { Sql: string, DatabaseName: string, FileName: string }) => {
     try {
-      const data = await uploadFile(request);
+      const data = await UploadFile(request);
       console.log("UploadFile result:", data);
       return data;
     } catch (err: any) {

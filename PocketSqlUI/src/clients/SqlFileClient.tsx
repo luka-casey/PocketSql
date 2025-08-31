@@ -2,7 +2,7 @@ import axios from "axios";
 
 const API_BASE = "http://localhost:5270/api/sqlfile";
 
-export async function uploadFile(request: { Sql: string, DatabaseName: string }): Promise<any> {
+export async function UploadFile(request: { Sql: string, DatabaseName: string, FileName: string }): Promise<any> {
   try {
     const response = await axios.post(`${API_BASE}/uploadFile`, request, {
       headers: {

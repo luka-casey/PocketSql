@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { getDatabases } from "../clients/SqlQueryClient";
+import { GetDatabases } from "../clients/SqlQueryClient";
 
 interface DatabaseDropdownProps {
   selectedDb: string;
@@ -13,7 +13,7 @@ export function DatabaseDropdown(props: DatabaseDropdownProps) {
   useEffect(() => {
     const fetchDatabases = async (): Promise<void> => {
       try {
-        const data = await getDatabases();
+        const data = await GetDatabases();
         props.setDatabases(data ?? []);
         if (data && data.length > 0 && (!props.selectedDb || props.selectedDb.length === 0)) {
           props.setSelectedDb?.(data[0]);

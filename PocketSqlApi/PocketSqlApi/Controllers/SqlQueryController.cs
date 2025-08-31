@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
 using PocketSqlApi.Commands.SqlFiles.UploadFile;
 using PocketSqlApi.Models;
@@ -17,16 +18,16 @@ public class SqlQueryController : ControllerBase
         _config = config;
     }
 
-    [HttpPost("execute")]
-    public async Task<IActionResult> ExecuteQuery([FromBody] SqlQueryRequest request)
+    [HttpPost("ExecuteQuery")]
+    public async Task<IActionResult> ExecuteQuery(string databaseName, string sqlQuery)
     {
         var result = await new ExecuteQueryHandler(_config.GetConnectionString("Default"))
-            .Handle(new ExecuteQuery(request));
+            .Handle(new ExecuteQuery(databaseName, sqlQuery));
 
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
 
-    [HttpGet("schema")]
+    [HttpGet("GetSchema")]
     public async Task<IActionResult> GetSchema(string database)
     {
         var result = await new GetSchemaQueryHandler(_config.GetConnectionString("Default"))
@@ -34,7 +35,7 @@ public class SqlQueryController : ControllerBase
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
 
-    [HttpGet("databases")]
+    [HttpGet("GetDatabases")]
     public async Task<IActionResult> GetDatabases()
     {
         var result = await new GetDatabasesQueryHandler(_config.GetConnectionString("Default"))

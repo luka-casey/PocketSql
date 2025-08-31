@@ -1,6 +1,5 @@
 using Dapper;
 using MySqlConnector;
-using PocketSqlApi.Models;
 
 namespace PocketSqlApi.Commands.SqlFiles.UploadFile;
 
@@ -17,7 +16,9 @@ public class UploadFileCommandHandler
     {
         try
         {
-            string sqlContent = command.Request.Sql;
+            string sqlContent = command.Sql;
+            string fileName = command.FileName;
+
             if (string.IsNullOrWhiteSpace(sqlContent))
             {
                 throw new SystemException("File is empty");
@@ -25,7 +26,7 @@ public class UploadFileCommandHandler
 
             var builder = new MySqlConnectionStringBuilder(_connectionString)
             {
-                Database = command.Request.DatabaseName
+                Database = command.DatabaseName
             };
 
             await using var conn = new MySqlConnection(builder.ConnectionString);
@@ -36,6 +37,7 @@ public class UploadFileCommandHandler
                 CREATE TABLE IF NOT EXISTS SqlFiles (
                     Id INT AUTO_INCREMENT PRIMARY KEY,
                     SqlText TEXT NOT NULL,
+                    FileName TEXT NOT NULL,
                     CreatedDateTime DATETIME NOT NULL,
                     ModifiedDateTime DATETIME NULL
                 );
@@ -45,13 +47,14 @@ public class UploadFileCommandHandler
 
             // Insert SQL text with timestamps
             var insertQuery = @"
-                INSERT INTO SqlFiles (SqlText, CreatedDateTime, ModifiedDateTime)
-                VALUES (@SqlText, @CreatedDateTime, @ModifiedDateTime);
+                INSERT INTO SqlFiles (SqlText, FileName CreatedDateTime, ModifiedDateTime)
+                VALUES (@SqlText, @FileName, @CreatedDateTime, @ModifiedDateTime);
             ";
 
             await conn.ExecuteAsync(insertQuery, new
             {
                 SqlText = sqlContent,
+                FileName = fileName,
                 CreatedDateTime = DateTime.UtcNow,
                 ModifiedDateTime = DateTime.UtcNow
             });

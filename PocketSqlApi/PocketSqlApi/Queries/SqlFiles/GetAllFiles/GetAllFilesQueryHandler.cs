@@ -39,7 +39,7 @@ public class GetAllFilesQueryHandler
                 await using var newConn = new MySqlConnection(newbuilder.ConnectionString);
                 await newConn.OpenAsync();
 
-                // ✅ Check if SqlFiles table exists
+                // ✅ Check if SqlFiles table exists`
                 var tableExists = await newConn.ExecuteScalarAsync<int>(
                     @"SELECT COUNT(*) 
                       FROM information_schema.tables 
