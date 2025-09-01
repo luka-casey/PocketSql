@@ -19,6 +19,7 @@ interface CollapsibleTreeProps {
   data: TreeNode[];
 }
 
+//TODO Need to hook up to Client
 const CollapsibleTreeWithIcons: React.FC<CollapsibleTreeProps> = ({ data }) => {
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = useState(true); // sidebar collapsed
