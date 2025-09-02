@@ -18,10 +18,10 @@ public class SqlFileController : ControllerBase
     }
 
     [HttpPost("uploadFile")]
-    public async Task<IActionResult> UploadFile(string Sql, string DatabaseName, string FileName)
+    public async Task<IActionResult> UploadFile(UploadFileRequest uploadFileRequest)
     {
         await new UploadFileCommandHandler(_config.GetConnectionString("Default")).
-            Handle(new UploadFileCommand(Sql, DatabaseName, FileName));
+            Handle(new UploadFileCommand(uploadFileRequest));
         return Ok();
     }
 

@@ -1,9 +1,9 @@
 import axios from "axios";
-import type { TableSchema } from "../Interfaces";
+import type { ExecuteQueryRequest, TableSchema } from "../Interfaces";
 
 const API_BASE = "http://localhost:5270/api/sqlquery";
 
-export async function ExecuteQuery(request: { DatabaseName: string, SqlQuery: string }): Promise<any> {
+export async function ExecuteQuery(request: ExecuteQueryRequest): Promise<any> {
   try {
     const response = await axios.post(`${API_BASE}/ExecuteQuery`, request, {
       headers: {

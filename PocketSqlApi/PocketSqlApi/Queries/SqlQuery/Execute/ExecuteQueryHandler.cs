@@ -18,13 +18,13 @@ public class ExecuteQueryHandler
         try
         {
             //TODO: Need to filter out commented lines. currently breaks the query
-            var sql = query.SqlQuery?.Trim();
+            var sql = query.Request.SqlQuery?.Trim();
             if (string.IsNullOrWhiteSpace(sql))
                 return SqlQueryResult.Fail("SQL query cannot be empty.");
 
             var builder = new MySqlConnectionStringBuilder(_connectionString)
             {
-                Database = query.DatabaseName
+                Database = query.Request.DatabaseName
             };
 
             await using var conn = new MySqlConnection(builder.ConnectionString);

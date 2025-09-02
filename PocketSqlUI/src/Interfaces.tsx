@@ -8,12 +8,20 @@ export interface TableSchema {
   columns: ColumnInfo[];
 }
 
-// export interface SqlQueryRequest {
-//   Sql: string;  // must match casing exactly for your API
-//   DatabaseName: string;
-// }
-
 export interface ExecuteQueryErrorResponse {
   error: string;
   errorCode: number;
+}
+
+
+//Api Request Payloads
+export interface ExecuteQueryRequest {
+  databaseName: string;
+  sqlQuery: string;
+}
+
+export interface UploadFileRequest {
+  sql: string;
+  fileName: string;
+  databaseName: string;
 }

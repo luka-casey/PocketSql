@@ -22,7 +22,7 @@ public class SqlQueryController : ControllerBase
     public async Task<IActionResult> ExecuteQuery([FromBody] ExecuteQueryRequest request)
     {
         var result = await new ExecuteQueryHandler(_config.GetConnectionString("Default"))
-            .Handle(new ExecuteQuery(request.DatabaseName, request.SqlQuery));
+            .Handle(new ExecuteQuery(request));
 
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }

@@ -5,7 +5,7 @@ import * as monaco from "monaco-editor";
 import { Box, Paper } from "@mui/material";
 import type { TableColumn } from "react-data-table-component";
 import { GetSchema, ExecuteQuery } from "../clients/SqlQueryClient";
-import type { TableSchema, ColumnInfo, ExecuteQueryErrorResponse } from "../Interfaces";
+import type { TableSchema, ColumnInfo, ExecuteQueryErrorResponse, ExecuteQueryRequest, UploadFileRequest } from "../Interfaces";
 import { SqlResults } from "./SqlResults";
 import Toolbar from "./Toolbar";
 import CollapsibleTreeWithIcons from "./FileExporer";
@@ -68,8 +68,7 @@ export function SqlEditor() {
     let sql: string = currentSql;
     let databaseName: string = selectedDbRef.current;
 
-    const request = { DatabaseName: databaseName,  SqlQuery: sql,  };
-    //console.log("Executing SQL request payload:", request);
+    const request: ExecuteQueryRequest = { databaseName: databaseName, sqlQuery: sql }
 
     try {
       const data = await ExecuteQuery(request);
@@ -143,7 +142,7 @@ export function SqlEditor() {
     });
   };
 
-  const executeUpload = async(request: { Sql: string,  FileName: string, DatabaseName: string,}) => {
+  const executeUpload = async(request: UploadFileRequest) => {
     try {
       console.log(request)
       const data = await UploadFile(request);

@@ -3,6 +3,7 @@ import { Toolbar as MUIToolbar, Button, Dialog, DialogActions, DialogContent, Di
 import DatabaseDropdown from "./DatabaseDropdown";
 import type * as monaco from "monaco-editor";
 import UploadIcon from '@mui/icons-material/Upload';
+import type { UploadFileRequest } from "../Interfaces";
 
 export interface ToolbarProps {
   selectedDb: string;
@@ -11,7 +12,7 @@ export interface ToolbarProps {
   setDatabases: React.Dispatch<React.SetStateAction<string[]>>;
   editorRef: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
   sqlValue: string;
-  executeUpload: (payload: { Sql: string; DatabaseName: string; FileName: string }) => Promise<any>;
+  executeUpload: (payload: UploadFileRequest) => Promise<any>;
 }
 
 export function Toolbar({
@@ -34,7 +35,9 @@ export function Toolbar({
   const handleConfirm = async () => {
     if (!fileName) return; // Don't upload if empty
     try {
-      await executeUpload({ Sql: sqlValue, DatabaseName: selectedDb, FileName: fileName });
+
+      let request: UploadFileRequest = { sql: sqlValue, databaseName: selectedDb, fileName: fileName };
+      await executeUpload(request);
       alert("SQL uploaded successfully");
     } catch {
       alert("Failed to upload SQL");

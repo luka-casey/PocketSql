@@ -4,14 +4,10 @@ namespace PocketSqlApi.Commands.SqlFiles.UploadFile;
 
 public class UploadFileCommand
 {
-    public string Sql { get; set; }
-    public string DatabaseName { get; set; }
-    public string FileName { get; set; }
+    public UploadFileRequest Request { get; set; }
 
-    public UploadFileCommand(string sql, string databaseName, string fileName)
+    public UploadFileCommand(UploadFileRequest request)
     {
-        Sql = sql;
-        DatabaseName = databaseName;
-        FileName = fileName;
+        Request = request;
     }
 }

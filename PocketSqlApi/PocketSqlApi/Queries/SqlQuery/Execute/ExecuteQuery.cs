@@ -4,11 +4,9 @@ namespace PocketSqlApi.Queries.SqlQuery.Execute;
 
 public class ExecuteQuery
 {
-    public string DatabaseName { get; set; }   
-    public string SqlQuery { get; set; }
-    public ExecuteQuery(string databaseName, string sqlQuery)
+    public ExecuteQueryRequest Request { get; set; }
+    public ExecuteQuery(ExecuteQueryRequest request)
     {
-        DatabaseName = databaseName;
-        SqlQuery = sqlQuery;
+        Request = request;
     }
 }
