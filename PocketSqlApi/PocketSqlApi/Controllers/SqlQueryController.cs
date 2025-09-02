@@ -18,14 +18,15 @@ public class SqlQueryController : ControllerBase
         _config = config;
     }
 
-    [HttpPost("ExecuteQuery")]
-    public async Task<IActionResult> ExecuteQuery(string databaseName, string sqlQuery)
+    [HttpPost("executeQuery")]
+    public async Task<IActionResult> ExecuteQuery([FromBody] ExecuteQueryRequest request)
     {
         var result = await new ExecuteQueryHandler(_config.GetConnectionString("Default"))
-            .Handle(new ExecuteQuery(databaseName, sqlQuery));
+            .Handle(new ExecuteQuery(request.DatabaseName, request.SqlQuery));
 
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
+
 
     [HttpGet("GetSchema")]
     public async Task<IActionResult> GetSchema(string database)

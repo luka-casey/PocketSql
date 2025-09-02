@@ -143,8 +143,9 @@ export function SqlEditor() {
     });
   };
 
-  const executeUpload = async(request: { Sql: string, DatabaseName: string, FileName: string }) => {
+  const executeUpload = async(request: { Sql: string,  FileName: string, DatabaseName: string,}) => {
     try {
+      console.log(request)
       const data = await UploadFile(request);
       console.log("UploadFile result:", data);
       return data;
