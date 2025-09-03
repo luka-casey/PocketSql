@@ -5,11 +5,19 @@ import * as monaco from "monaco-editor";
 import { Box, Paper } from "@mui/material";
 import type { TableColumn } from "react-data-table-component";
 import { GetSchema, ExecuteQuery } from "../clients/SqlQueryClient";
-import type { TableSchema, ColumnInfo, ExecuteQueryErrorResponse, ExecuteQueryRequest, UploadFileRequest } from "../Interfaces";
+import type {
+  TableSchema,
+  ColumnInfo,
+  ExecuteQueryErrorResponse,
+  ExecuteQueryRequest,
+  UploadFileRequest,
+  GetFileRequest,
+  SqlFileValueData
+} from "../Interfaces";
 import { SqlResults } from "./SqlResults";
 import Toolbar from "./Toolbar";
 import CollapsibleTreeWithIcons from "./FileExporer";
-import { UploadFile } from "../clients/SqlFileClient";
+import { GetFile, UploadFile } from "../clients/SqlFileClient";
 
 export function SqlEditor() {
   const schemaRef = useRef<TableSchema[]>([]);
@@ -65,10 +73,10 @@ export function SqlEditor() {
       return;
     }
 
-    let sql: string = currentSql;
-    let databaseName: string = selectedDbRef.current;
-
-    const request: ExecuteQueryRequest = { databaseName: databaseName, sqlQuery: sql }
+    const request: ExecuteQueryRequest = {
+      databaseName: selectedDbRef.current,
+      sqlQuery: currentSql
+    };
 
     try {
       const data = await ExecuteQuery(request);
@@ -123,18 +131,14 @@ export function SqlEditor() {
       },
     });
 
-    // Shift + Enter => run query
     editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Enter, () => {
       handleRunClick();
     });
 
-    // Shift + Tab => move focus to results container's focusable element (the scrollable Paper)
     editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Tab, () => {
       setTimeout(() => {
         const wrapper = dataTableRef.current;
         if (!wrapper) return;
-
-        // prefer focusing the inner element that has tabindex=0 (our scrollable Paper)
         const focusable = wrapper.querySelector('[tabindex="0"]') as HTMLElement | null;
         if (focusable) focusable.focus();
         else wrapper.focus();
@@ -144,7 +148,6 @@ export function SqlEditor() {
 
   const executeUpload = async(request: UploadFileRequest) => {
     try {
-      console.log(request)
       const data = await UploadFile(request);
       console.log("UploadFile result:", data);
       return data;
@@ -154,32 +157,38 @@ export function SqlEditor() {
       else setError(err?.message ?? "Unknown error");
       throw err;
     }
-  }
+  };
 
-  const treeData = [
-  {
-    id: "1",
-    name: "src",
-    children: [
-      { id: "2", name: "index.tsx", isFile: true },
-      { id: "3", name: "App.tsx", isFile: true },
-      {
-        id: "4",
-        name: "components",
-        children: [
-          { id: "5", name: "Tree.tsx", isFile: true },
-          { id: "6", name: "TreeWithIcons.tsx", isFile: true },
-        ],
-      },
-    ],
-  },
-];
+  const handleFileClick = async (request: GetFileRequest) => {
+    console.log("handleFileClick called with request:", request);
+
+    try {
+      const file: SqlFileValueData = await GetFile(request);
+      console.log("File fetched from API:", file);
+
+      // Update the React state
+      setSqlValue(file.sqlText ?? "");
+      console.log("React state sqlValue set to:", file.sqlText);
+
+      // Update the Monaco editor directly
+      if (editorRef.current) {
+        editorRef.current.setValue(file.sqlText ?? "");
+        console.log("Monaco editor value set to:", editorRef.current.getValue());
+      }
+
+      setSelectedDb(file.databaseName); // auto-select DB
+      console.log("Selected DB set to:", file.databaseName);
+    } catch (err) {
+      console.error("Error loading file into editor", err);
+      setError("Failed to load file");
+    }
+  };
+
 
   return (
     <Box sx={{ display: "flex", flexDirection: "row", height: "100vh", bgcolor: "#121212", color: "white" }}>
-      
       <div style={{ display: "flex" }}>
-        <CollapsibleTreeWithIcons data={treeData} />
+        <CollapsibleTreeWithIcons onFileClick={handleFileClick} />
       </div>
 
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", p: 2, gap: 1, overflow: "hidden" }}>
@@ -189,7 +198,7 @@ export function SqlEditor() {
           databases={databases}
           setDatabases={setDatabases}
           editorRef={editorRef}
-          sqlValue={sqlValue} 
+          sqlValue={sqlValue}
           executeUpload={executeUpload}
         />
 
@@ -211,7 +220,7 @@ export function SqlEditor() {
         error={error}
         editorRef={editorRef}
         results={results}
-        dataTableRef={dataTableRef} // <-- pass the wrapper ref so editor can find the inner focusable element
+        dataTableRef={dataTableRef}
       />
     </Box>
   );

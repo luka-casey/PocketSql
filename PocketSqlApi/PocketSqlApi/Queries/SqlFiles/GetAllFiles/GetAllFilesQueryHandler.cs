@@ -31,15 +31,15 @@ public class GetAllFilesQueryHandler
 
             foreach (var databaseName in databases)
             {
-                var newbuilder = new MySqlConnectionStringBuilder(_connectionString)
+                var newBuilder = new MySqlConnectionStringBuilder(_connectionString)
                 {
                     Database = databaseName
                 };
 
-                await using var newConn = new MySqlConnection(newbuilder.ConnectionString);
+                await using var newConn = new MySqlConnection(newBuilder.ConnectionString);
                 await newConn.OpenAsync();
 
-                // ✅ Check if SqlFiles table exists`
+                // ✅ Check if SqlFiles table exists
                 var tableExists = await newConn.ExecuteScalarAsync<int>(
                     @"SELECT COUNT(*) 
                       FROM information_schema.tables 
@@ -50,24 +50,28 @@ public class GetAllFilesQueryHandler
                 if (tableExists == 0)
                     continue;
 
-                // ✅ Fetch IDs
-                var fileIds = await newConn.QueryAsync<int>("SELECT Id FROM SqlFiles;");
+                // ✅ Fetch rows into a lightweight object
+                var files = await newConn.QueryAsync<(int Id, string FileName)>(
+                    "SELECT Id, FileName FROM SqlFiles;"
+                );
 
-                foreach (var id in fileIds)
+                foreach (var file in files)
                 {
                     results.Add(new FileIdentifier
                     {
                         DatabaseName = databaseName,
-                        Id = id
+                        Id = file.Id,
+                        FileName = file.FileName
                     });
                 }
             }
 
             return results;
         }
-        catch
+        catch (Exception ex)
         {
-            // On error return empty list
+            // On error return empty list, but log/throw if needed
+            Console.Error.WriteLine($"Error in GetAllFilesQueryHandler: {ex.Message}");
             return new List<FileIdentifier>();
         }
     }

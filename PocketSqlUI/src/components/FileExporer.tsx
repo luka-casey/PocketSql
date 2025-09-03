@@ -1,12 +1,32 @@
 // CollapsibleTreeWithIcons.tsx
-import React, { useState } from "react";
-import { List, ListItemButton, ListItemIcon, ListItemText, Collapse, IconButton, Box } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import {
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Collapse,
+  IconButton,
+  Box,
+  Typography,
+} from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import FolderIcon from "@mui/icons-material/Folder";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import { GetAllFiles } from "../clients/SqlFileClient";
+import type { GetFileRequest } from "../Interfaces";
+
+// -------------------------
+// Interfaces
+// -------------------------
+export interface FileIdentifier {
+  databaseName: string;
+  id: number;
+  fileName: string;
+}
 
 interface TreeNode {
   id: string;
@@ -15,15 +35,49 @@ interface TreeNode {
   isFile?: boolean;
 }
 
-interface CollapsibleTreeProps {
-  data: TreeNode[];
+interface CollapsibleTreeWithIconsProps {
+  onFileClick: (request: GetFileRequest) => void;
 }
 
-//TODO Need to hook up to Client
-const CollapsibleTreeWithIcons: React.FC<CollapsibleTreeProps> = ({ data }) => {
+// -------------------------
+// Component
+// -------------------------
+const CollapsibleTreeWithIcons: React.FC<CollapsibleTreeWithIconsProps> = ({ onFileClick }) => {
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = useState(true); // sidebar collapsed
+  const [treeData, setTreeData] = useState<TreeNode[]>([]);
 
+  // Build tree structure from flat file list
+  useEffect(() => {
+    const fetchData = async () => {
+      const files = await GetAllFiles();
+
+      // Group by databaseName
+      const dbMap: Record<string, TreeNode> = {};
+
+      files.forEach((file) => {
+        if (!dbMap[file.databaseName]) {
+          dbMap[file.databaseName] = {
+            id: file.databaseName,
+            name: file.databaseName,
+            children: [],
+          };
+        }
+
+        dbMap[file.databaseName].children!.push({
+          id: `${file.databaseName}-${file.id}`,
+          name: file.fileName,
+          isFile: true,
+        });
+      });
+
+      setTreeData(Object.values(dbMap));
+    };
+
+    fetchData();
+  }, []);
+
+  // Toggle folders open/closed
   const toggleNode = (id: string) => {
     const newSet = new Set(openIds);
     if (newSet.has(id)) newSet.delete(id);
@@ -31,18 +85,26 @@ const CollapsibleTreeWithIcons: React.FC<CollapsibleTreeProps> = ({ data }) => {
     setOpenIds(newSet);
   };
 
+  // Recursive renderer
   const renderNode = (node: TreeNode, level = 0) => {
     const hasChildren = node.children && node.children.length > 0;
 
     return (
       <div key={node.id}>
         <ListItemButton
-          onClick={() => hasChildren && toggleNode(node.id)}
-          sx={{
-            pl: 1 + level * 1.5,
-            py: 0.3,
-            minHeight: 24,
+          onClick={() => {
+            if (hasChildren) {
+              toggleNode(node.id);
+            } else {
+              const request = { 
+                databaseName: node.id.split("-")[0], 
+                id: parseInt(node.id.split("-")[1]) 
+              };
+              console.log("File clicked, request:", request); // <--- log request
+              onFileClick(request);
+            }
           }}
+          sx={{ pl: 1 + level * 1.5, py: 0.3, minHeight: 24 }}
         >
           <ListItemIcon sx={{ minWidth: 20, color: "white", mr: 0.5 }}>
             {hasChildren
@@ -81,7 +143,7 @@ const CollapsibleTreeWithIcons: React.FC<CollapsibleTreeProps> = ({ data }) => {
     <div
       style={{
         padding: "10px",
-        width: collapsed ? "25px" : "150px",
+        width: collapsed ? "25px" : "180px",
         transition: "width 0.3s",
         backgroundColor: "#121212",
       }}
@@ -91,13 +153,13 @@ const CollapsibleTreeWithIcons: React.FC<CollapsibleTreeProps> = ({ data }) => {
           <MenuIcon sx={{ fontSize: 18, color: "white" }} />
         </IconButton>
         {!collapsed && (
-          <h4 style={{ fontFamily: "sans-serif", fontSize: "12px", margin: 0, marginLeft: 4 }}>
+          <Typography variant="subtitle2" sx={{ ml: 1, color: "white" }}>
             Object Explorer
-          </h4>
+          </Typography>
         )}
       </Box>
 
-      <List>{data.map((node) => renderNode(node))}</List>
+      <List>{treeData.map((node) => renderNode(node))}</List>
     </div>
   );
 };

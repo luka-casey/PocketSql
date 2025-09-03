@@ -1,5 +1,6 @@
 import axios from "axios";
-import type { UploadFileRequest } from "../Interfaces";
+import type { GetFileRequest, SqlFileValueData, UploadFileRequest } from "../Interfaces";
+import type { FileIdentifier } from "../components/FileExporer";
 
 const API_BASE = "http://localhost:5270/api/sqlfile";
 
@@ -18,6 +19,28 @@ export async function UploadFile(request: UploadFileRequest): Promise<any> {
         `Error ${errData.errorCode}: ${errData.error || "Unknown error"}`
       );
     }
+    throw error;
+  }
+}
+
+export async function GetFile(request: GetFileRequest): Promise<SqlFileValueData> {
+  try {
+    const response = await axios.get<SqlFileValueData>(`${API_BASE}/getFile`, {
+      params: request,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching file:", error);
+    throw error;
+  }
+}
+
+export async function GetAllFiles(): Promise<FileIdentifier[]> {
+  try {
+    const response = await axios.get<FileIdentifier[]>(`${API_BASE}/getAllFiles`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching files:", error);
     throw error;
   }
 }
