@@ -13,45 +13,48 @@ public class EditFileCommandHandler
         _connectionString = connectionString;
     }
 
-    public async Task<string> Handle(EditFileCommand command)
+    public async Task<int> Handle(EditFileCommand command)
     {
-        try
+        if (command?.Request == null)
+            throw new ArgumentNullException(nameof(command), "EditFileCommand cannot be null.");
+
+        if (string.IsNullOrWhiteSpace(command.Request.Sql))
+            throw new ArgumentException("SQL content cannot be empty.", nameof(command.Request.Sql));
+
+        if (string.IsNullOrWhiteSpace(command.Request.DatabaseName))
+            throw new ArgumentException("DatabaseName is required.", nameof(command.Request.DatabaseName));
+
+        var builder = new MySqlConnectionStringBuilder(_connectionString)
         {
-            string sqlContent = command.Sql;
-            if (string.IsNullOrWhiteSpace(sqlContent))
-            {
-                throw new SystemException("File is empty");
-            }
+            Database = command.Request.DatabaseName
+        };
 
-            var builder = new MySqlConnectionStringBuilder(_connectionString)
-            {
-                Database = command.Database
-            };
+        await using var conn = new MySqlConnection(builder.ConnectionString);
+        await conn.OpenAsync();
 
-            await using var conn = new MySqlConnection(builder.ConnectionString);
-            await conn.OpenAsync();
+        var updateCommand = @"
+            UPDATE SqlFiles 
+            SET SqlText = @SqlText,
+                ModifiedDateTime = @ModifiedDateTime,
+                FileName = @FileName
+            WHERE Id = @Id;
+        ";
 
-            var updateCommand = @"
-                UPDATE SqlFiles 
-                SET SqlText = @SqlText,
-                    ModifiedDateTime = @ModifiedDateTime,
-                    FileName = @FileName
-                WHERE Id = @Id;
-            ";
-
-            await conn.ExecuteAsync(updateCommand, new
-            {
-                SqlText = sqlContent,
-                ModifiedDateTime = DateTime.UtcNow,
-                FileName = command.FileName,
-                Id = command.ID
-            });
-
-            return "SQL file saved successfully.";
-        }
-        catch (Exception ex)
+        var rowsAffected = await conn.ExecuteAsync(updateCommand, new
         {
-            return $"Error: {ex.Message}";
+            SqlText = command.Request.Sql,
+            ModifiedDateTime = DateTime.UtcNow,
+            FileName = command.Request.FileName,
+            Id = command.Request.Id
+        });
+
+        if (rowsAffected == 0)
+        {
+            throw new KeyNotFoundException(
+                $"No record found with Id={command.Request.Id} in database '{command.Request.DatabaseName}'."
+            );
         }
+
+        return rowsAffected;
     }
 }

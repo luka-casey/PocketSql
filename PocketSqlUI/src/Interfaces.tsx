@@ -40,3 +40,9 @@ export interface GetFileRequest {
   id: number;
 }
 
+export interface EditFileRequest {
+  databaseName: string;
+  id: number;
+  sql: string;
+  fileName: string;
+}

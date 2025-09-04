@@ -143,7 +143,7 @@ const CollapsibleTreeWithIcons: React.FC<CollapsibleTreeWithIconsProps> = ({ onF
     <div
       style={{
         padding: "10px",
-        width: collapsed ? "25px" : "180px",
+        width: collapsed ? "25px" : "240px",
         transition: "width 0.3s",
         backgroundColor: "#121212",
       }}

@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { GetFileRequest, SqlFileValueData, UploadFileRequest } from "../Interfaces";
+import type { EditFileRequest, GetFileRequest, SqlFileValueData, UploadFileRequest } from "../Interfaces";
 import type { FileIdentifier } from "../components/FileExporer";
 
 const API_BASE = "http://localhost:5270/api/sqlfile";
@@ -44,3 +44,14 @@ export async function GetAllFiles(): Promise<FileIdentifier[]> {
     throw error;
   }
 }
+
+export async function EditFile(request: EditFileRequest): Promise<any> {
+  try {
+    const response = await axios.patch<any>(`${API_BASE}/editFile`, request);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error editing file:", error.response?.data || error.message);
+    throw error;
+  }
+}
+

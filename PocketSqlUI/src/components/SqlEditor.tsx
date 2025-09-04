@@ -12,12 +12,13 @@ import type {
   ExecuteQueryRequest,
   UploadFileRequest,
   GetFileRequest,
-  SqlFileValueData
+  SqlFileValueData,
+  EditFileRequest
 } from "../Interfaces";
 import { SqlResults } from "./SqlResults";
 import Toolbar from "./Toolbar";
 import CollapsibleTreeWithIcons from "./FileExporer";
-import { GetFile, UploadFile } from "../clients/SqlFileClient";
+import { EditFile, GetFile, UploadFile } from "../clients/SqlFileClient";
 
 export function SqlEditor() {
   const schemaRef = useRef<TableSchema[]>([]);
@@ -31,6 +32,7 @@ export function SqlEditor() {
   const [selectedDb, setSelectedDb] = useState<string>("");
   const selectedDbRef = useRef<string>("");
   const [columns, setColumns] = useState<TableColumn<Record<string, any>>[]>([]);
+  const [currentFile, setCurrentFile] = useState<SqlFileValueData | undefined>(undefined);
 
   useEffect(() => {
     selectedDbRef.current = selectedDb;
@@ -148,8 +150,22 @@ export function SqlEditor() {
 
   const executeUpload = async(request: UploadFileRequest) => {
     try {
-      const data = await UploadFile(request);
-      console.log("UploadFile result:", data);
+      let data = undefined;
+
+      if (currentFile === undefined) {
+        data = await UploadFile(request);
+      } else {
+        
+        let editFileRequest: EditFileRequest = { 
+          databaseName: currentFile.databaseName, 
+          id: currentFile.id, 
+          sql: sqlValue,
+          fileName: request.fileName
+        }
+        console.log(editFileRequest)
+        data = await EditFile(editFileRequest)
+      }
+      //console.log("UploadFile result:", data);
       return data;
     } catch (err: any) {
       console.error("executeUpload error:", err);
@@ -160,26 +176,29 @@ export function SqlEditor() {
   };
 
   const handleFileClick = async (request: GetFileRequest) => {
-    console.log("handleFileClick called with request:", request);
+    //console.log("handleFileClick called with request:", request);
 
     try {
       const file: SqlFileValueData = await GetFile(request);
-      console.log("File fetched from API:", file);
+      //console.log("File fetched from API:", file);
+      setCurrentFile(file);
+      //console.log("Current file is...")
+      //console.log(file)
 
       // Update the React state
       setSqlValue(file.sqlText ?? "");
-      console.log("React state sqlValue set to:", file.sqlText);
+      //console.log("React state sqlValue set to:", file.sqlText);
 
       // Update the Monaco editor directly
       if (editorRef.current) {
         editorRef.current.setValue(file.sqlText ?? "");
-        console.log("Monaco editor value set to:", editorRef.current.getValue());
+        //console.log("Monaco editor value set to:", editorRef.current.getValue());
       }
 
       setSelectedDb(file.databaseName); // auto-select DB
-      console.log("Selected DB set to:", file.databaseName);
+      //console.log("Selected DB set to:", file.databaseName);
     } catch (err) {
-      console.error("Error loading file into editor", err);
+      //console.error("Error loading file into editor", err);
       setError("Failed to load file");
     }
   };

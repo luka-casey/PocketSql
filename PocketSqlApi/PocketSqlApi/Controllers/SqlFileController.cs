@@ -35,12 +35,14 @@ public class SqlFileController : ControllerBase
 
 
     [HttpPatch("editFile")]
-    public async Task<IActionResult> EditFile(string database, int id, string sql, string fileName)
+    public async Task<IActionResult> EditFile([FromBody] EditFileRequest editFileRequest)
     {
-        var result = await new EditFileCommandHandler(_config.GetConnectionString("Default")).
-            Handle(new EditFileCommand(database, id, sql, fileName));
-        return Ok();
+        var result = await new EditFileCommandHandler(_config.GetConnectionString("Default"))
+            .Handle(new EditFileCommand(editFileRequest));
+
+        return Ok(result);
     }
+
 
     [HttpGet("getAllFiles")]
     public async Task<IActionResult> GetAllFiles()
