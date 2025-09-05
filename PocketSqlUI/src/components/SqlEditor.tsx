@@ -24,6 +24,7 @@ export function SqlEditor() {
   const schemaRef = useRef<TableSchema[]>([]);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const dataTableRef = useRef<HTMLDivElement | null>(null);
+  const explorerRef = useRef<{ refresh: () => void }>(null); // 👈 ref for explorer
 
   const [sqlValue, setSqlValue] = useState<string>("SELECT * FROM ");
   const [results, setResults] = useState<Record<string, any>[]>([]);
@@ -148,69 +149,74 @@ export function SqlEditor() {
     });
   };
 
-  const executeUpload = async(request: UploadFileRequest) => {
-    try {
-      let data = undefined;
+const executeUpload = async (request: UploadFileRequest) => {
+  try {
+    let data: SqlFileValueData;
 
-      if (currentFile === undefined) {
-        data = await UploadFile(request);
-      } else {
-        
-        let editFileRequest: EditFileRequest = { 
-          databaseName: currentFile.databaseName, 
-          id: currentFile.id, 
-          sql: sqlValue,
-          fileName: request.fileName
-        }
-        console.log(editFileRequest)
-        data = await EditFile(editFileRequest)
-      }
-      //console.log("UploadFile result:", data);
-      return data;
-    } catch (err: any) {
-      console.error("executeUpload error:", err);
-      if (err && typeof err === "object" && "error" in err) setError((err as ExecuteQueryErrorResponse).error);
-      else setError(err?.message ?? "Unknown error");
-      throw err;
+    if (currentFile === undefined) {
+      data = await UploadFile(request);
+    } else {
+      let editFileRequest: EditFileRequest = { 
+        databaseName: currentFile.databaseName, 
+        id: currentFile.id, 
+        sql: sqlValue,
+        fileName: request.fileName
+      };
+      data = await EditFile(editFileRequest);
     }
-  };
+
+    // ✅ Ensure fileName exists (fallback to request.fileName)
+    const updatedFile: SqlFileValueData = {
+      ...data,
+      fileName: request.fileName,
+    };
+
+    setCurrentFile(updatedFile);
+
+    // ✅ Refresh explorer
+    explorerRef.current?.refresh();
+
+    return updatedFile;
+  } catch (err: any) {
+    console.error("executeUpload error:", err);
+    if (err && typeof err === "object" && "error" in err) {
+      setError((err as ExecuteQueryErrorResponse).error);
+    } else {
+      setError(err?.message ?? "Unknown error");
+    }
+    throw err;
+  }
+};
+
+
 
   const handleFileClick = async (request: GetFileRequest) => {
-    //console.log("handleFileClick called with request:", request);
-
     try {
       const file: SqlFileValueData = await GetFile(request);
-      //console.log("File fetched from API:", file);
       setCurrentFile(file);
-      //console.log("Current file is...")
-      //console.log(file)
 
-      // Update the React state
       setSqlValue(file.sqlText ?? "");
-      //console.log("React state sqlValue set to:", file.sqlText);
-
-      // Update the Monaco editor directly
       if (editorRef.current) {
         editorRef.current.setValue(file.sqlText ?? "");
-        //console.log("Monaco editor value set to:", editorRef.current.getValue());
       }
 
       setSelectedDb(file.databaseName); // auto-select DB
-      //console.log("Selected DB set to:", file.databaseName);
-    } catch (err) {
-      //console.error("Error loading file into editor", err);
+    } catch {
       setError("Failed to load file");
     }
   };
 
-
   return (
     <Box sx={{ display: "flex", flexDirection: "row", height: "100vh", bgcolor: "#121212", color: "white" }}>
       <div style={{ display: "flex" }}>
-        <CollapsibleTreeWithIcons onFileClick={handleFileClick} />
+        <CollapsibleTreeWithIcons
+          ref={explorerRef}
+          onFileClick={handleFileClick}
+          databaseName={currentFile?.databaseName}
+        />
       </div>
 
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", p: 2, gap: 1, overflow: "hidden" }}>
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", p: 2, overflow: "hidden" }}>
         <Toolbar
           selectedDb={selectedDb}
           setSelectedDb={setSelectedDb}
@@ -222,17 +228,33 @@ export function SqlEditor() {
           existingFileName={currentFile?.fileName}
         />
 
-        <Paper elevation={3} sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <Editor
-            value={sqlValue}
-            onChange={(val) => setSqlValue(val ?? "")}
-            language="sql"
-            theme="vs-dark"
-            onMount={handleEditorMount}
-            height="100%"
-            options={{ wordWrap: "on", minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 14 }}
-          />
-        </Paper>
+        {currentFile?.fileName &&(
+          <div style={{
+            backgroundColor: "#373737ff",
+            padding: "5px",
+            width: "fit-content"
+          }}>
+            <p 
+              style={{
+                margin: "0px",
+                color: "#52a6ffff",
+                fontFamily: "Consolas, Menlo, Monaco, monospace",
+                fontSize: "12px"
+              }}
+            >
+              {currentFile?.fileName}.sql
+            </p>
+          </div>
+        )}
+        <Editor
+          value={sqlValue}
+          onChange={(val) => setSqlValue(val ?? "")}
+          language="sql"
+          theme="vs-dark"
+          onMount={handleEditorMount}
+          height="100%"
+          options={{ wordWrap: "on", minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 14 }}
+        />
       </Box>
 
       <SqlResults

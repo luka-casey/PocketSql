@@ -1,8 +1,16 @@
 import React, { useState } from "react";
-import { Toolbar as MUIToolbar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
+import {
+  Toolbar as MUIToolbar,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField
+} from "@mui/material";
 import DatabaseDropdown from "./DatabaseDropdown";
 import type * as monaco from "monaco-editor";
-import UploadIcon from '@mui/icons-material/Upload';
+import Save from "@mui/icons-material/SaveSharp";
 import type { UploadFileRequest } from "../Interfaces";
 
 export interface ToolbarProps {
@@ -31,14 +39,18 @@ export function Toolbar({
 
   const handleUploadClick = () => {
     if (!editorRef.current) return;
+    setFileName(existingFileName || ""); // Prefill filename
     setOpenDialog(true);
   };
 
   const handleConfirm = async () => {
     if (!fileName) return; // Don't upload if empty
     try {
-
-      let request: UploadFileRequest = { sql: sqlValue, databaseName: selectedDb, fileName: fileName };
+      const request: UploadFileRequest = {
+        sql: sqlValue,
+        databaseName: selectedDb,
+        fileName: fileName
+      };
       await executeUpload(request);
       alert("SQL uploaded successfully");
     } catch {
@@ -55,9 +67,15 @@ export function Toolbar({
   };
 
   return (
-    <>
+    <div>
       <MUIToolbar
-        sx={{ backgroundColor: "#262626", gap: 1, minHeight: "40px", paddingX: "8px" }}
+        sx={{
+          backgroundColor: "#262626",
+          gap: 1,
+          minHeight: "40px",
+          paddingX: "8px",
+          marginBottom: "10px"
+        }}
       >
         <DatabaseDropdown
           selectedDb={selectedDb}
@@ -67,14 +85,18 @@ export function Toolbar({
           setSelectedDb={setSelectedDb}
         />
         <Button
-          variant="contained"
+          variant="text"
           color="primary"
-          size="small"
-          sx={{ minWidth: "auto", width: "28px", padding: 0 }}
+          size="medium"
+          sx={{
+            minWidth: 28,
+            padding: 0,
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" }
+          }}
           disabled={!selectedDb || !sqlValue}
           onClick={handleUploadClick}
         >
-          <UploadIcon fontSize="small" sx={{ color: "white" }} />
+          <Save fontSize="small" sx={{ color: "white" }} />
         </Button>
       </MUIToolbar>
 
@@ -88,10 +110,10 @@ export function Toolbar({
             type="text"
             fullWidth
             variant="standard"
-            value={existingFileName}
+            value={fileName} // controlled by state
             onChange={(e) => setFileName(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && fileName) handleConfirm(); // Submit on Enter
+              if (e.key === "Enter" && fileName) handleConfirm();
             }}
           />
         </DialogContent>
@@ -102,7 +124,7 @@ export function Toolbar({
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </div>
   );
 }
 
