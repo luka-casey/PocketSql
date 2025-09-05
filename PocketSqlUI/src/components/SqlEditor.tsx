@@ -219,6 +219,7 @@ export function SqlEditor() {
           editorRef={editorRef}
           sqlValue={sqlValue}
           executeUpload={executeUpload}
+          existingFileName={currentFile?.fileName}
         />
 
         <Paper elevation={3} sx={{ flex: 1, display: "flex", flexDirection: "column" }}>

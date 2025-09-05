@@ -13,6 +13,7 @@ export interface ToolbarProps {
   editorRef: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
   sqlValue: string;
   executeUpload: (payload: UploadFileRequest) => Promise<any>;
+  existingFileName: string | undefined;
 }
 
 export function Toolbar({
@@ -23,6 +24,7 @@ export function Toolbar({
   editorRef,
   sqlValue,
   executeUpload,
+  existingFileName
 }: ToolbarProps) {
   const [openDialog, setOpenDialog] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -86,7 +88,7 @@ export function Toolbar({
             type="text"
             fullWidth
             variant="standard"
-            value={fileName}
+            value={existingFileName}
             onChange={(e) => setFileName(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && fileName) handleConfirm(); // Submit on Enter
