@@ -140,9 +140,3 @@ Add a `LICENSE` file for your preferred license (MIT is a common choice).
 This project started as a personal tool to get a compact, keyboard-friendly SQL UI running on the ClockworkPi uConsole. If you find it useful, drop a star ⭐ and feedback is welcome!
 
 ---
-
-If you want, I can:
-
-* Add a quick table of keyboard shortcuts,
-* Draft `appsettings.Development.json` and `.env` examples,
-* Or format this as a GitHub README file ready to paste into your repo. Which would you like?
