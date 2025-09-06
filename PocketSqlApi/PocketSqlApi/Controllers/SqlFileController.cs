@@ -54,4 +54,6 @@ public class SqlFileController : ControllerBase
         return Ok(result);
     }
 
+    //TODO: Add delete file endpoint 
+
 }
