@@ -84,3 +84,6 @@ lcov-report/
 # Temporary files
 tmp/
 temp/
+
+#.Net files
+appsettings.json
