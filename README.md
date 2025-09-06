@@ -26,7 +26,7 @@ PocketSQL focuses on:
 
 * [.NET SDK (7+)](https://dotnet.microsoft.com/download)
 * [Node.js (LTS)](https://nodejs.org/)
-* MariaDB
+* [MariaDB](https://share.google/k0Jm3wmPyrY4hBMsu)
 
 ---
 
