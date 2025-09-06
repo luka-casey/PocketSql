@@ -6,11 +6,14 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField
+  TextField,
+  IconButton,
+  Tooltip
 } from "@mui/material";
 import DatabaseDropdown from "./DatabaseDropdown";
 import type * as monaco from "monaco-editor";
 import Save from "@mui/icons-material/SaveSharp";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import type { UploadFileRequest } from "../Interfaces";
 
 export interface ToolbarProps {
@@ -98,6 +101,21 @@ export function Toolbar({
         >
           <Save fontSize="small" sx={{ color: "white" }} />
         </Button>
+
+        {/* Question mark button with tooltip */}
+        <Tooltip
+          title={
+            <div>
+              <div><b>Shift + Enter</b> → Search</div>
+              <div><b>Shift + Tab</b> → Switch focus on window</div>
+            </div>
+          }
+          arrow
+        >
+          <IconButton size="small" sx={{ color: "white" }}>
+            <HelpOutlineIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </MUIToolbar>
 
       <Dialog open={openDialog} onClose={handleCancel}>
