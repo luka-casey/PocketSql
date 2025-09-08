@@ -78,6 +78,8 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
       setOpenIds(newSet);
     };
 
+    //TODO: implement delete file functionality 
+
     const renderNode = (node: TreeNode, level = 0) => {
       const hasChildren = node.children && node.children.length > 0;
 
