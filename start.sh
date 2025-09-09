@@ -1,31 +1,18 @@
 #!/bin/bash
 
-# Open a new iTerm2 tab for the .NET API
-osascript <<EOF
-tell application "iTerm2"
-  tell current window
-    create tab with default profile
-    tell current session
-      write text "cd ~/Desktop/PocketSql/PocketSqlApi/PocketSqlApi && dotnet run"
-    end tell
-  end tell
-end tell
-EOF
+# Always resolve relative to the script location
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Open another iTerm2 tab for the React frontend
-osascript <<EOF
-tell application "iTerm2"
-  tell current window
-    create tab with default profile
-    tell current session
-      write text "cd ~/Desktop/PocketSql/PocketSqlUI && npm run dev"
-    end tell
-  end tell
-end tell
-EOF
+# Start .NET API in background
+(cd "$ROOT_DIR/PocketSqlApi/PocketSqlApi" && dotnet run) &
 
-# Wait a few seconds for the React dev server to start
-sleep 5
+# Start React frontend in background
+(cd "$ROOT_DIR/PocketSqlUI" && npm run dev) &
 
-# Open the app in the default browser
+# Wait until React dev server is listening on port 5173
+until nc -z localhost 5173; do
+  sleep 0.5
+done
+
+# Open the app in default browser
 open "http://localhost:5173/"

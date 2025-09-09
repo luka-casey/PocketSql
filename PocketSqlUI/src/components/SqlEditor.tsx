@@ -192,6 +192,14 @@ const executeUpload = async (request: UploadFileRequest) => {
 
   const handleFileClick = async (request: GetFileRequest) => {
     try {
+
+      if (currentFile?.sqlText !== undefined && sqlValue !== currentFile?.sqlText) {
+        const proceed = window.confirm(
+          "You've made changes without saving. Are you sure you want to switch files?"
+        );
+        if (!proceed) return;
+      }
+
       const file: SqlFileValueData = await GetFile(request);
       setCurrentFile(file);
 
