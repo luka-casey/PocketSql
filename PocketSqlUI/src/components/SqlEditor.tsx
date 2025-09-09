@@ -192,8 +192,16 @@ const executeUpload = async (request: UploadFileRequest) => {
 
   const handleFileClick = async (request: GetFileRequest) => {
     try {
+      console.log(sqlValue)
 
-      if (currentFile?.sqlText !== undefined && sqlValue !== currentFile?.sqlText) {
+      if (sqlValue !== "SELECT * FROM " && currentFile?.sqlText === undefined)
+      {
+        const proceed = window.confirm(
+          "You've made changes without saving. Are you sure you want to switch files?"
+        );
+        if (!proceed) return;
+      }
+      else if (currentFile?.sqlText !== undefined && sqlValue !== currentFile?.sqlText) {
         const proceed = window.confirm(
           "You've made changes without saving. Are you sure you want to switch files?"
         );
