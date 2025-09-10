@@ -133,7 +133,7 @@ Want to help? Great! Open an issue or send a PR. Suggestions for:
 
 ## License
 
-Add a `LICENSE` file for your preferred license (MIT is a common choice).
+
 
 ---
 
