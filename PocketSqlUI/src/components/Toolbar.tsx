@@ -15,6 +15,7 @@ import type * as monaco from "monaco-editor";
 import Save from "@mui/icons-material/SaveSharp";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import type { UploadFileRequest } from "../Interfaces";
+import Delete from "@mui/icons-material/Delete";
 
 export interface ToolbarProps {
   selectedDb: string;
@@ -25,6 +26,7 @@ export interface ToolbarProps {
   sqlValue: string;
   executeUpload: (payload: UploadFileRequest) => Promise<any>;
   existingFileName: string | undefined;
+  executeDelete: () => Promise<any>;
 }
 
 export function Toolbar({
@@ -35,7 +37,8 @@ export function Toolbar({
   editorRef,
   sqlValue,
   executeUpload,
-  existingFileName
+  existingFileName,
+  executeDelete
 }: ToolbarProps) {
   const [openDialog, setOpenDialog] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -44,6 +47,12 @@ export function Toolbar({
     if (!editorRef.current) return;
     setFileName(existingFileName || ""); // Prefill filename
     setOpenDialog(true);
+  };
+
+  const handleDeleteClick = async () => {
+    if (!editorRef.current) return;
+    setFileName(existingFileName || ""); // Prefill filename
+    await executeDelete()
   };
 
   const handleConfirm = async () => {
@@ -87,6 +96,14 @@ export function Toolbar({
           setDatabases={setDatabases}
           setSelectedDb={setSelectedDb}
         />
+        <Tooltip
+          title={
+            <div>
+              <div><b>Save</b></div>
+            </div>
+          }
+          arrow
+        >
         <Button
           variant="text"
           color="primary"
@@ -101,13 +118,13 @@ export function Toolbar({
         >
           <Save fontSize="small" sx={{ color: "white" }} />
         </Button>
-
+        </Tooltip>
         {/* Question mark button with tooltip */}
         <Tooltip
           title={
             <div>
               <div><b>Shift + Enter</b> → Search</div>
-              <div><b>Shift + Tab</b> → Switch focus on window</div>
+              <div><b>Shift + Tab</b> → Toggle between sql editor & results window</div>
             </div>
           }
           arrow
@@ -116,6 +133,31 @@ export function Toolbar({
             <HelpOutlineIcon fontSize="small" />
           </IconButton>
         </Tooltip>
+
+        <Tooltip
+          title={
+            <div>
+              <div><b>Delete</b></div>
+            </div>
+          }
+          arrow
+        >
+        <Button
+          variant="text"
+          color="primary"
+          size="medium"
+          sx={{
+            minWidth: 28,
+            padding: 0,
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" }
+          }}
+          disabled={!selectedDb || !sqlValue}
+          onClick={handleDeleteClick}
+        >
+          <Delete fontSize="small" sx={{ color: "white" }} />
+        </Button>
+        </Tooltip>
+
       </MUIToolbar>
 
       <Dialog open={openDialog} onClose={handleCancel}>
