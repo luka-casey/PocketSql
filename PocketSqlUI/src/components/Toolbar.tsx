@@ -16,6 +16,7 @@ import Save from "@mui/icons-material/SaveSharp";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import type { UploadFileRequest } from "../Interfaces";
 import Delete from "@mui/icons-material/Delete";
+import NoteAdd from "@mui/icons-material/NoteAdd";
 
 export interface ToolbarProps {
   selectedDb: string;
@@ -156,6 +157,19 @@ export function Toolbar({
         >
           <Delete fontSize="small" sx={{ color: "white" }} />
         </Button>
+        </Tooltip>
+
+        <Tooltip
+          title={
+            <div>
+              <div><b>New file</b></div>
+            </div>
+          }
+          arrow
+        >
+          <IconButton size="small" sx={{ color: "white" }}>
+            <NoteAdd fontSize="small" />
+          </IconButton>
         </Tooltip>
 
       </MUIToolbar>
