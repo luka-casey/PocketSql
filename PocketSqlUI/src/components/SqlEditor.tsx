@@ -149,25 +149,35 @@ export function SqlEditor() {
 		});
 	};
 
+    const createNewFile = async () => {
+        console.log(sqlValue)
+        console.log(currentFile?.sqlText)
+
+        if (sqlValue === "SELECT * FROM ")
+        {
+            
+
+        } else if (sqlValue === currentFile?.sqlText) {
+            setSqlValue("SELECT * FROM ")
+            setResults([])
+            setCurrentFile(undefined)
+        }
+        else {
+            const proceed = window.confirm(`Are you sure you want to create a new file? Any unsaved changes will be deleted?`);
+            if (!proceed) return;
+            
+            setSqlValue("SELECT * FROM ")
+            setResults([])
+            setCurrentFile(undefined)
+        }
+    }
+
 	const executeDelete = async () => {
-		// if (!editorRef.current) return;
-		//     const currentSql = editorRef.current.getValue();
-		//     setSqlValue(currentSql);
-		//     setError(null);
-
-		// if (!selectedDbRef.current) {
-		//   setError("Please select a database before running the query.");
-		//   return;
-		// }
-        
-
 		let request: ExecuteQueryRequest | undefined = undefined;
 
 		if (currentFile !== undefined) {
 
-            const proceed = window.confirm(
-					`Are you sure you want to delete ${currentFile.fileName}`
-				);
+            const proceed = window.confirm(`Are you sure you want to delete ${currentFile.fileName}`);
             if (!proceed) return;
 
 			request = {
@@ -188,12 +198,7 @@ export function SqlEditor() {
 				if (err && typeof err === "object" && "error" in err) setError((err as ExecuteQueryErrorResponse).error);
 				else setError(err?.message ?? "Unknown error");
 			}
-
-		} else {
-
-
-
-		}
+		} 
 	}
 
 	const executeUpload = async (request: UploadFileRequest) => {
@@ -289,6 +294,7 @@ export function SqlEditor() {
 					executeUpload={executeUpload}
 					existingFileName={currentFile?.fileName}
 					executeDelete={executeDelete}
+                    createNewFile={createNewFile}
 				/>
 
 				{currentFile?.fileName && (

@@ -28,6 +28,7 @@ export interface ToolbarProps {
   executeUpload: (payload: UploadFileRequest) => Promise<any>;
   existingFileName: string | undefined;
   executeDelete: () => Promise<any>;
+  createNewFile: () => Promise<any>;
 }
 
 export function Toolbar({
@@ -39,7 +40,8 @@ export function Toolbar({
   sqlValue,
   executeUpload,
   existingFileName,
-  executeDelete
+  executeDelete,
+  createNewFile
 }: ToolbarProps) {
   const [openDialog, setOpenDialog] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -167,9 +169,19 @@ export function Toolbar({
           }
           arrow
         >
-          <IconButton size="small" sx={{ color: "white" }}>
+        <Button
+          variant="text"
+          size="medium"
+          sx={{
+            minWidth: 28,
+            padding: 0,
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+            color: "white"
+          }}
+          onClick={createNewFile}
+        >
             <NoteAdd fontSize="small" />
-          </IconButton>
+        </Button>
         </Tooltip>
 
       </MUIToolbar>
