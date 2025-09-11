@@ -55,6 +55,22 @@ npm install
 
 ---
 
+## Configuration
+
+Configure your database connection in the backend configuration (e.g. `appsettings.json` or environment variables). Example `appsettings.json` snippet:
+
+```json
+{
+  "ConnectionStrings": {
+    "Default": "Server=127.0.0.1;Port=3306;Database=mydb;User=myuser;Password=mypassword;"
+  }
+}
+```
+
+Make sure your MariaDB/MySQL server is running and accessible from the machine where the PocketSQL API runs.
+
+---
+
 ## Run (development)
 
 Run the backend and frontend in separate terminals:
@@ -74,22 +90,6 @@ npm run dev
 ```
 
 The frontend dev server will proxy requests to the API (check `PocketSqlUI` config if you need to change ports).
-
----
-
-## Configuration
-
-Configure your database connection in the backend configuration (e.g. `appsettings.json` or environment variables). Example `appsettings.json` snippet:
-
-```json
-{
-  "ConnectionStrings": {
-    "Default": "Server=127.0.0.1;Port=3306;Database=mydb;User=myuser;Password=mypassword;"
-  }
-}
-```
-
-Make sure your MariaDB/MySQL server is running and accessible from the machine where the PocketSQL API runs.
 
 ---
 
@@ -133,7 +133,7 @@ Want to help? Great! Open an issue or send a PR. Suggestions for:
 
 ## License
 
-Add a `LICENSE` file for your preferred license (MIT is a common choice).
+
 
 ---
 
