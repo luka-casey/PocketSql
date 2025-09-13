@@ -203,6 +203,7 @@ export function SqlResults(props: SqlResultsProps) {
             striped
             dense
             pagination={true}
+            paginationPerPage={20}
           />
         ) : (
           <Box
