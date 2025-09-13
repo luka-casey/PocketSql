@@ -17,7 +17,7 @@ public class ExecuteQueryHandler
     {
         try
         {
-            //TODO: Need to filter out commented lines. currently breaks the query
+            //TODO: Need to filter out commented lines. currently breaks the query!!!
             var sql = query.Request.SqlQuery?.Trim();
             if (string.IsNullOrWhiteSpace(sql))
                 return SqlQueryResult.Fail("SQL query cannot be empty.");
