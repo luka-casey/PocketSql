@@ -96,9 +96,9 @@ export function SqlEditor() {
 		editorRef.current = editor;
 		editor.focus();
 
-		try { monacoInstance.languages.register({ id: "sql" }); } catch { }
+		try { monacoInstance.languages.register({ id: "mysql" }); } catch { }
 
-		monacoInstance.languages.registerCompletionItemProvider("sql", {
+		monacoInstance.languages.registerCompletionItemProvider("mysql", {
 			triggerCharacters: [" ", "."],
 			provideCompletionItems: (model, position) => {
 				if (!schemaRef.current.length) return { suggestions: [] };
@@ -318,7 +318,7 @@ export function SqlEditor() {
 				<Editor
 					value={sqlValue}
 					onChange={(val) => setSqlValue(val ?? "")}
-					language="sql"
+					language="mysql"
 					theme="vs-dark"
 					onMount={handleEditorMount}
 					height="100%"
