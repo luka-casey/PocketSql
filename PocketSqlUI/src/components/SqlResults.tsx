@@ -202,6 +202,7 @@ export function SqlResults(props: SqlResultsProps) {
             responsive
             striped
             dense
+            pagination={true}
           />
         ) : (
           <Box

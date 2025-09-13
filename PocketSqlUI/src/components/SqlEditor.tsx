@@ -318,7 +318,7 @@ export function SqlEditor() {
 				<Editor
 					value={sqlValue}
 					onChange={(val) => setSqlValue(val ?? "")}
-					language="mysql"
+					language="sql"
 					theme="vs-dark"
 					onMount={handleEditorMount}
 					height="100%"
