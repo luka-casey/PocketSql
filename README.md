@@ -57,7 +57,7 @@ npm install
 
 ## Configuration
 
-Configure your database connection in the backend configuration (e.g. `appsettings.json` or environment variables). Example `appsettings.json` snippet:
+Configure your database connection by creating appsettings.json - Create in PocketsqlApi/configuration 
 
 ```json
 {
