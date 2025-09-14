@@ -160,7 +160,10 @@ export function SqlResults(props: SqlResultsProps) {
       ref={wrapperRef}
       tabIndex={-1}
       sx={{
-        width: "42%",
+        flexGrow: 1,       // allows it to grow
+        flexShrink: 1,     // allows it to shrink
+        //flexBasis: "20%",  // starting width
+        width: "0%",
         display: "flex",
         flexDirection: "column",
         p: 2,

@@ -35,6 +35,8 @@ export function SqlEditor() {
 	const [columns, setColumns] = useState<TableColumn<Record<string, any>>[]>([]);
 	const [currentFile, setCurrentFile] = useState<SqlFileValueData | undefined>(undefined);
     const [togglePagination, setTogglePagination] = useState<boolean>(true); 
+    const [toggleResultsPane, setToggleResultsPane] = useState<boolean>(true); 
+    const [toggleEditor, setToggleEditor] = useState<boolean>(true); 
 
 	useEffect(() => {
 		selectedDbRef.current = selectedDb;
@@ -94,61 +96,72 @@ export function SqlEditor() {
 	};
 
 	const handleEditorMount: OnMount = (editor, monacoInstance) => {
-		editorRef.current = editor;
-		editor.focus();
+    editorRef.current = editor;
+    editor.focus();
 
-		try { monacoInstance.languages.register({ id: "mysql" }); } catch { }
+    try { monacoInstance.languages.register({ id: "mysql" }); } catch { }
 
-		monacoInstance.languages.registerCompletionItemProvider("mysql", {
-			triggerCharacters: [" ", "."],
-			provideCompletionItems: (model, position) => {
-				if (!schemaRef.current.length) return { suggestions: [] };
-				const word = model.getWordUntilPosition(position);
-				const range: monaco.IRange = {
-					startLineNumber: position.lineNumber,
-					endLineNumber: position.lineNumber,
-					startColumn: word.startColumn,
-					endColumn: word.endColumn,
-				};
-				const suggestions: monaco.languages.CompletionItem[] = [];
-				schemaRef.current.forEach((table) => {
-					suggestions.push({
-						label: table.table,
-						kind: monaco.languages.CompletionItemKind.Class,
-						insertText: table.table,
-						detail: "Table",
-						documentation: `Table: ${table.table}`,
-						range,
-					});
-					table.columns.forEach((col: ColumnInfo) => {
-						suggestions.push({
-							label: `${table.table}.${col.columnName}`,
-							kind: monaco.languages.CompletionItemKind.Field,
-							insertText: col.columnName,
-							detail: `${col.dataType} (Column of ${table.table})`,
-							documentation: `Column: ${col.columnName} (${col.dataType})`,
-							range,
-						});
-					});
-				});
-				return { suggestions };
-			},
-		});
+    monacoInstance.languages.registerCompletionItemProvider("mysql", {
+        triggerCharacters: [" ", "."],
+        provideCompletionItems: (model, position) => {
+            if (!schemaRef.current.length) return { suggestions: [] };
+            const word = model.getWordUntilPosition(position);
+            const range: monaco.IRange = {
+                startLineNumber: position.lineNumber,
+                endLineNumber: position.lineNumber,
+                startColumn: word.startColumn,
+                endColumn: word.endColumn,
+            };
+            const suggestions: monaco.languages.CompletionItem[] = [];
+            schemaRef.current.forEach((table) => {
+                suggestions.push({
+                    label: table.table,
+                    kind: monaco.languages.CompletionItemKind.Class,
+                    insertText: table.table,
+                    detail: "Table",
+                    documentation: `Table: ${table.table}`,
+                    range,
+                });
+                table.columns.forEach((col: ColumnInfo) => {
+                    suggestions.push({
+                        label: `${table.table}.${col.columnName}`,
+                        kind: monaco.languages.CompletionItemKind.Field,
+                        insertText: col.columnName,
+                        detail: `${col.dataType} (Column of ${table.table})`,
+                        documentation: `Column: ${col.columnName} (${col.dataType})`,
+                        range,
+                    });
+                });
+            });
+            return { suggestions };
+        },
+    });
 
-		editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Enter, () => {
-			handleRunClick();
-		});
+    // Run query on Shift+Enter
+    editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Enter, () => {
+        handleRunClick();
+    });
 
-		editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Tab, () => {
-			setTimeout(() => {
-				const wrapper = dataTableRef.current;
-				if (!wrapper) return;
-				const focusable = wrapper.querySelector('[tabindex="0"]') as HTMLElement | null;
-				if (focusable) focusable.focus();
-				else wrapper.focus();
-			}, 0);
-		});
-	};
+    // Focus results table on Shift+Tab
+    editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.Tab, () => {
+        setTimeout(() => {
+            const wrapper = dataTableRef.current;
+            if (!wrapper) return;
+            const focusable = wrapper.querySelector('[tabindex="0"]') as HTMLElement | null;
+            if (focusable) focusable.focus();
+            else wrapper.focus();
+        }, 0);
+    });
+
+    // --- NEW: Toggle boolean with Ctrl+E / Cmd+E ---
+    // editor.addCommand(
+    //     monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyR,
+    //     () => {
+    //         setToggleResultsPane(prev => !prev);
+    //     }
+    // );
+};
+
 
     const createNewFile = async () => {
         console.log(sqlValue)
@@ -275,8 +288,7 @@ export function SqlEditor() {
 	};
 
 	return (
-        <div>
-            <div>
+        <div style={{height: "100vh"}}>
                 <Toolbar
                     selectedDb={selectedDb}
                     setSelectedDb={setSelectedDb}
@@ -290,9 +302,12 @@ export function SqlEditor() {
                     createNewFile={createNewFile}
                     togglePagination={togglePagination}
                     setTogglePagination={setTogglePagination}
+                    toggleResultsPane={toggleEditor}
+                    setToggleResultsPane={setToggleEditor}
+                    toggleEditor={toggleResultsPane}
+                    setToggleEditor={setToggleResultsPane}
                 />
-            </div>
-            <Box sx={{ display: "flex", flexDirection: "row", height: "100vh", bgcolor: "#121212", color: "white" }}>
+            <Box sx={{ display: "flex", height: "90vh", flexDirection: "row", bgcolor: "#121212", color: "white" }}>
 
                 <div style={{ display: "flex" }}>
                     <CollapsibleTreeWithIcons
@@ -302,6 +317,7 @@ export function SqlEditor() {
                     />
                 </div>
 
+                {(toggleEditor &&
                 <Box sx={{ flex: 1, display: "flex", flexDirection: "column", p: 2, overflow: "hidden" }}>
                     <div
                         style={{
@@ -321,7 +337,7 @@ export function SqlEditor() {
                             {currentFile?.fileName ? `${currentFile.fileName}.sql` : "SQLQuery.sql"}
                         </p>
                     </div>
-
+                    
                     <Editor
                         value={sqlValue}
                         onChange={(val) => setSqlValue(val ?? "")}
@@ -333,7 +349,9 @@ export function SqlEditor() {
                     />
                     
                 </Box>
+                )}
 
+                {toggleResultsPane && (
                 <SqlResults
                     columns={columns}
                     error={error}
@@ -342,6 +360,7 @@ export function SqlEditor() {
                     dataTableRef={dataTableRef}
                     togglePagination={togglePagination}
                 />
+                )}
             </Box>
         </div>
 	);
