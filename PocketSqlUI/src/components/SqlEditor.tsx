@@ -34,6 +34,7 @@ export function SqlEditor() {
 	const selectedDbRef = useRef<string>("");
 	const [columns, setColumns] = useState<TableColumn<Record<string, any>>[]>([]);
 	const [currentFile, setCurrentFile] = useState<SqlFileValueData | undefined>(undefined);
+    const [togglePagination, setTogglePagination] = useState<boolean>(true); 
 
 	useEffect(() => {
 		selectedDbRef.current = selectedDb;
@@ -274,66 +275,75 @@ export function SqlEditor() {
 	};
 
 	return (
-		<Box sx={{ display: "flex", flexDirection: "row", height: "100vh", bgcolor: "#121212", color: "white" }}>
-			<div style={{ display: "flex" }}>
-				<CollapsibleTreeWithIcons
-					ref={explorerRef}
-					onFileClick={handleFileClick}
-					databaseName={currentFile?.databaseName}
-				/>
-			</div>
-
-			<Box sx={{ flex: 1, display: "flex", flexDirection: "column", p: 2, overflow: "hidden" }}>
-				<Toolbar
-					selectedDb={selectedDb}
-					setSelectedDb={setSelectedDb}
-					databases={databases}
-					setDatabases={setDatabases}
-					editorRef={editorRef}
-					sqlValue={sqlValue}
-					executeUpload={executeUpload}
-					existingFileName={currentFile?.fileName}
-					executeDelete={executeDelete}
+        <div>
+            <div>
+                <Toolbar
+                    selectedDb={selectedDb}
+                    setSelectedDb={setSelectedDb}
+                    databases={databases}
+                    setDatabases={setDatabases}
+                    editorRef={editorRef}
+                    sqlValue={sqlValue}
+                    executeUpload={executeUpload}
+                    existingFileName={currentFile?.fileName}
+                    executeDelete={executeDelete}
                     createNewFile={createNewFile}
-				/>
+                    togglePagination={togglePagination}
+                    setTogglePagination={setTogglePagination}
+                />
+            </div>
+            <Box sx={{ display: "flex", flexDirection: "row", height: "100vh", bgcolor: "#121212", color: "white" }}>
 
-				{currentFile?.fileName && (
-					<div style={{
-						backgroundColor: "#373737ff",
-						padding: "5px",
-						width: "fit-content"
-					}}>
-						<p
-							style={{
-								margin: "0px",
-								color: "#52a6ffff",
-								fontFamily: "Consolas, Menlo, Monaco, monospace",
-								fontSize: "12px"
-							}}
-						>
-							{currentFile?.fileName}.sql
-						</p>
-					</div>
-				)}
-				<Editor
-					value={sqlValue}
-					onChange={(val) => setSqlValue(val ?? "")}
-					language="mysql"
-					theme="vs-dark"
-					onMount={handleEditorMount}
-					height="100%"
-					options={{ wordWrap: "on", minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 14 }}
-				/>
-			</Box>
+                <div style={{ display: "flex" }}>
+                    <CollapsibleTreeWithIcons
+                        ref={explorerRef}
+                        onFileClick={handleFileClick}
+                        databaseName={currentFile?.databaseName}
+                    />
+                </div>
 
-			<SqlResults
-				columns={columns}
-				error={error}
-				editorRef={editorRef}
-				results={results}
-				dataTableRef={dataTableRef}
-			/>
-		</Box>
+                <Box sx={{ flex: 1, display: "flex", flexDirection: "column", p: 2, overflow: "hidden" }}>
+                    <div
+                        style={{
+                            backgroundColor: "#373737ff",
+                            padding: "5px",
+                            width: "fit-content",
+                        }}
+                        >
+                        <p
+                            style={{
+                            margin: "0px",
+                            color: "#52a6ffff",
+                            fontFamily: "Consolas, Menlo, Monaco, monospace",
+                            fontSize: "12px",
+                            }}
+                        >
+                            {currentFile?.fileName ? `${currentFile.fileName}.sql` : "SQLQuery.sql"}
+                        </p>
+                    </div>
+
+                    <Editor
+                        value={sqlValue}
+                        onChange={(val) => setSqlValue(val ?? "")}
+                        language="mysql"
+                        theme="vs-dark"
+                        onMount={handleEditorMount}
+                        height="100%"
+                        options={{ wordWrap: "on", minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 14 }}
+                    />
+                    
+                </Box>
+
+                <SqlResults
+                    columns={columns}
+                    error={error}
+                    editorRef={editorRef}
+                    results={results}
+                    dataTableRef={dataTableRef}
+                    togglePagination={togglePagination}
+                />
+            </Box>
+        </div>
 	);
 }
 

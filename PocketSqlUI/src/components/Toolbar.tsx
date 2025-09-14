@@ -17,6 +17,8 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import type { UploadFileRequest } from "../Interfaces";
 import Delete from "@mui/icons-material/Delete";
 import NoteAdd from "@mui/icons-material/NoteAdd";
+import ToggleOn from "@mui/icons-material/ToggleOn";
+import ToggleOff from "@mui/icons-material/ToggleOff";
 
 export interface ToolbarProps {
   selectedDb: string;
@@ -29,6 +31,8 @@ export interface ToolbarProps {
   existingFileName: string | undefined;
   executeDelete: () => Promise<any>;
   createNewFile: () => Promise<any>;
+  togglePagination: boolean;
+  setTogglePagination: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function Toolbar({
@@ -41,7 +45,9 @@ export function Toolbar({
   executeUpload,
   existingFileName,
   executeDelete,
-  createNewFile
+  createNewFile,
+  togglePagination,
+  setTogglePagination
 }: ToolbarProps) {
   const [openDialog, setOpenDialog] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -89,7 +95,7 @@ export function Toolbar({
           gap: 1,
           minHeight: "40px",
           paddingX: "8px",
-          marginBottom: "10px"
+          //marginBottom: "10px"
         }}
       >
         <DatabaseDropdown
@@ -181,6 +187,31 @@ export function Toolbar({
           onClick={createNewFile}
         >
             <NoteAdd fontSize="small" />
+        </Button>
+        </Tooltip>
+
+        <Tooltip
+          title={
+            <div>
+              <div><b>Toggle pagination</b></div>
+            </div>
+          }
+          arrow
+        >
+        <Button
+          variant="text"
+          size="medium"
+          sx={{
+            minWidth: 28,
+            padding: 0,
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+            color: "white"
+          }}
+          onClick={() => setTogglePagination((prev) => !prev)} // toggle state
+        >
+            {togglePagination ? (
+                <ToggleOn fontSize="small" />) : (<ToggleOff fontSize="small" sx={{ color: "#707070ff" }} /> // custom color when off
+            )}
         </Button>
         </Tooltip>
 

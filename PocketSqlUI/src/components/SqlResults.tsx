@@ -10,6 +10,7 @@ interface SqlResultsProps {
   editorRef: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
   results: Record<string, any>[];
   dataTableRef?: React.RefObject<HTMLDivElement | null>; // optional wrapper ref from parent
+  togglePagination: boolean
 }
 
 export function SqlResults(props: SqlResultsProps) {
@@ -202,7 +203,7 @@ export function SqlResults(props: SqlResultsProps) {
             responsive
             striped
             dense
-            pagination={true}
+            pagination={props.togglePagination}
             paginationPerPage={20}
           />
         ) : (
