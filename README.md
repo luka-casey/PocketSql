@@ -8,7 +8,7 @@ It was created for minimal systems (think: ClockworkPi **uConsole** on **ARM64**
 PocketSQL focuses on:
 
 * Small-screen-friendly UI
-* Keyboard-first workflow (useful when the mouse is limited)
+* Keyboard-first workflow
 * Lightweight footprint for ARM64 devices
 
 ---
