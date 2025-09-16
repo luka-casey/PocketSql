@@ -4,4 +4,5 @@ html, body, #root {
   margin: 0;
   padding: 0;
   background: #121212; /* Match dark theme if needed */
+  overflow: hidden;
 }

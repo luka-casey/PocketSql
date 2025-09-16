@@ -288,7 +288,7 @@ export function SqlEditor() {
 	};
 
 	return (
-        <div style={{height: "100vh"}}>
+        <div style={{height: "100vh", overflow: "hidden"}}>
                 <Toolbar
                     selectedDb={selectedDb}
                     setSelectedDb={setSelectedDb}
@@ -302,10 +302,10 @@ export function SqlEditor() {
                     createNewFile={createNewFile}
                     togglePagination={togglePagination}
                     setTogglePagination={setTogglePagination}
-                    toggleResultsPane={toggleEditor}
-                    setToggleResultsPane={setToggleEditor}
-                    toggleEditor={toggleResultsPane}
-                    setToggleEditor={setToggleResultsPane}
+                    toggleResultsPane={toggleResultsPane}
+                    setToggleResultsPane={setToggleResultsPane}
+                    toggleEditor={toggleEditor}
+                    setToggleEditor={setToggleEditor}
                 />
             <Box sx={{ display: "flex", height: "90vh", flexDirection: "row", bgcolor: "#121212", color: "white" }}>
 
