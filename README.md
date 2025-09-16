@@ -1,21 +1,22 @@
 # PocketSQL
 
 PocketSQL is a lightweight, keyboard-first web UI + API for running SQL queries.
-It was created for minimal systems (think: ClockworkPi **uConsole** on **ARM64**) where heavy tools like MySQL Workbench or SSMS are too big or mouse-driven. It works just as well on any machine that can run .NET and MariaDB/MySQL.
+It was created for minimal systems (think: ClockworkPi **uConsole** on **ARM64**) where heavy tools like MySQL Workbench or SSMS are too big or mouse-driven. It works just as well on any machine that can run .NET and MariaDB.
 
-<img width="1703" height="935" alt="Screenshot 2025-09-06 at 2 17 15 PM" src="https://github.com/user-attachments/assets/9d8a848a-8a74-41be-818d-e313389eaa7e" />
+* [Featured on the ClockWorkPi Forum](https://forum.clockworkpi.com/t/pocketsql-a-lightweight-and-keyboard-focused-sql-editor-for-uconsole/19664)
+<img width="1401" height="729" alt="Screenshot 2025-09-16 at 10 04 58 AM" src="https://github.com/user-attachments/assets/443803ac-1a4d-4cf2-b8f2-b9dda065f3d8" />
 
 PocketSQL focuses on:
 
 * Small-screen-friendly UI
-* Keyboard-first workflow (useful when the mouse is limited)
+* Keyboard-first workflow
 * Lightweight footprint for ARM64 devices
 
 ---
 
 ## Features
 
-* Run ad-hoc SQL queries against MariaDB / MySQL
+* Run ad-hoc SQL queries against MariaDB
 * Simple, responsive UI designed for small screens
 * Keyboard shortcuts and minimal mouse dependence
 * Bulky desktop DB tools not required
@@ -67,7 +68,7 @@ Configure your database connection by creating appsettings.json - Create in Pock
 }
 ```
 
-Make sure your MariaDB/MySQL server is running and accessible from the machine where the PocketSQL API runs.
+Make sure your MariaDB server is running and accessible from the machine where the PocketSQL API runs.
 
 ---
 
