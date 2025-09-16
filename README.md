@@ -1,7 +1,7 @@
 # PocketSQL
 
 PocketSQL is a lightweight, keyboard-first web UI + API for running SQL queries.
-It was created for minimal systems (think: ClockworkPi **uConsole** on **ARM64**) where heavy tools like MySQL Workbench or SSMS are too big or mouse-driven. It works just as well on any machine that can run .NET and MariaDB.
+It was created for minimal systems (think: ClockworkPi **uConsole** on **ARM64**) where heavy tools like MySQL Workbench or SSMS are too big or mouse-driven. It works just as well on any machine that can run .NET, Node, and MariaDB.
 
 * [Featured on the ClockWorkPi Forum](https://forum.clockworkpi.com/t/pocketsql-a-lightweight-and-keyboard-focused-sql-editor-for-uconsole/19664)
 
