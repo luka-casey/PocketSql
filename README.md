@@ -6,6 +6,8 @@ It was created for minimal systems (think: ClockworkPi **uConsole** on **ARM64**
 * [Featured on the ClockWorkPi Forum](https://forum.clockworkpi.com/t/pocketsql-a-lightweight-and-keyboard-focused-sql-editor-for-uconsole/19664)
 <img width="1401" height="729" alt="Screenshot 2025-09-16 at 10 04 58 AM" src="https://github.com/user-attachments/assets/443803ac-1a4d-4cf2-b8f2-b9dda065f3d8" />
 
+![PXL_20250916_021932763 PORTRAIT ORIGINAL](https://github.com/user-attachments/assets/d8c9e27c-ee02-4ad6-89d3-3a22fda75a82)
+
 PocketSQL focuses on:
 
 * Small-screen-friendly UI
