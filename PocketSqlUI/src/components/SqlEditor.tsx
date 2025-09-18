@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 import type { OnMount } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import { Box, Paper } from "@mui/material";
+import { Box } from "@mui/material";
 import type { TableColumn } from "react-data-table-component";
 import { GetSchema, ExecuteQuery } from "../clients/SqlQueryClient";
 import type {
@@ -19,6 +19,7 @@ import { SqlResults } from "./SqlResults";
 import Toolbar from "./Toolbar";
 import CollapsibleTreeWithIcons from "./FileExporer";
 import { EditFile, GetFile, UploadFile } from "../clients/SqlFileClient";
+import { confirm } from '@tauri-apps/plugin-dialog'
 
 export function SqlEditor() {
 	const schemaRef = useRef<TableSchema[]>([]);
@@ -177,7 +178,10 @@ export function SqlEditor() {
             setCurrentFile(undefined)
         }
         else {
-            const proceed = window.confirm(`Are you sure you want to create a new file? Any unsaved changes will be deleted?`);
+            const proceed = await confirm(`Are you sure you want to create a new file? Any unsaved changes will be deleted?`,
+            { title: 'Confirm', kind: 'warning' }
+  )
+            //const proceed = window.confirm(`Are you sure you want to create a new file? Any unsaved changes will be deleted?`);
             if (!proceed) return;
             
             setSqlValue("SELECT * FROM ")
@@ -191,7 +195,10 @@ export function SqlEditor() {
 
 		if (currentFile !== undefined) {
 
-            const proceed = window.confirm(`Are you sure you want to delete ${currentFile.fileName}`);
+            const proceed = await confirm(`Are you sure you want to delete ${currentFile.fileName}`,
+            { title: 'Confirm Delete', kind: 'warning' })
+
+            //const proceed = window.confirm(`Are you sure you want to delete ${currentFile.fileName}`);
             if (!proceed) return;
 
 			request = {
@@ -261,15 +268,19 @@ export function SqlEditor() {
 			console.log(sqlValue)
 
 			if (sqlValue !== "SELECT * FROM " && currentFile?.sqlText === undefined) {
-				const proceed = window.confirm(
-					"You've made changes without saving. Are you sure you want to switch files?"
-				);
+                const proceed = await confirm(`You've made changes without saving. Are you sure you want to switch files?`,
+                { title: 'Confirm', kind: 'warning' })
+				// const proceed = window.confirm(
+				// 	"You've made changes without saving. Are you sure you want to switch files?"
+				// );
 				if (!proceed) return;
 			}
 			else if (currentFile?.sqlText !== undefined && sqlValue !== currentFile?.sqlText) {
-				const proceed = window.confirm(
-					"You've made changes without saving. Are you sure you want to switch files?"
-				);
+                const proceed = await confirm(`You've made changes without saving. Are you sure you want to switch files?`,
+                { title: 'Confirm', kind: 'warning' })
+				// const proceed = window.confirm(
+				// 	"You've made changes without saving. Are you sure you want to switch files?"
+				// );
 				if (!proceed) return;
 			}
 

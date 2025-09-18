@@ -8,10 +8,11 @@ builder.Configuration
 // Allow CORS for React (Vite) dev server
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowViteFrontend",
+    options.AddPolicy("AllowAllOrigins",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173")
+            policy
+                .AllowAnyOrigin()
                 .AllowAnyHeader()
                 .AllowAnyMethod();
         });
@@ -33,7 +34,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Apply CORS
-app.UseCors("AllowViteFrontend");
+app.UseCors("AllowAllOrigins");
 
 app.UseRouting();
 app.UseAuthorization();
