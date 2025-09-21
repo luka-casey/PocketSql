@@ -222,6 +222,7 @@ export function SqlEditor() {
 		} 
 	}
 
+//TODO: Investigate bug about "missing database name"
 	const executeUpload = async (request: UploadFileRequest) => {
 		try {
 			let data: SqlFileValueData;
