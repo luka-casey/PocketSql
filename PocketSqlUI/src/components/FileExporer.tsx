@@ -35,6 +35,8 @@ interface CollapsibleTreeWithIconsProps {
   databaseName: string | undefined;
 }
 
+//TODO Sort alphabetically 
+
 const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, CollapsibleTreeWithIconsProps>(
   ({ onFileClick, databaseName }, ref) => {
     const [openIds, setOpenIds] = useState<Set<string>>(new Set());
