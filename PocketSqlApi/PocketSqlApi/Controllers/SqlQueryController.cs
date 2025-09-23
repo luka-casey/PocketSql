@@ -1,10 +1,9 @@
-using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
-using PocketSqlApi.Commands.SqlFiles.UploadFile;
 using PocketSqlApi.Models;
 using PocketSqlApi.Queries.SqlQuery.Execute;
 using PocketSqlApi.Queries.SqlQuery.GetDatabases;
 using PocketSqlApi.Queries.SqlQuery.GetSchema;
+using PocketSqlApi.Queries.SqlQuery.GetStoredProcs;
 
 namespace PocketSqlApi.Controllers;
 
@@ -44,4 +43,11 @@ public class SqlQueryController : ControllerBase
         return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
     }
 
+    [HttpGet("GetStoredProcs")]
+    public async Task<IActionResult> GetStoredProcs()
+    {
+        var result = await new GetStoredProcsQueryHandler(_config.GetConnectionString("Default"))
+            .Handle();
+        return result.Success ? Ok(result.Data) : BadRequest(new { result.Error, result.ErrorCode });
+    }
 }
