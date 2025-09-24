@@ -35,3 +35,5 @@ export async function GetDatabases(): Promise<string[]> {
   });
   return response.data;
 }
+
+//TODO Add get stored procs client 
