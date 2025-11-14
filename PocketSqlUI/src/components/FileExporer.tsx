@@ -96,6 +96,7 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
                   databaseName: node.id.split("-")[0], 
                   id: parseInt(node.id.split("-")[1]) 
                 };
+
                 onFileClick(request);
               }
             }}

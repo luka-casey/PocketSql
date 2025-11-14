@@ -83,6 +83,7 @@ export function Toolbar({
                 databaseName: selectedDb,
                 fileName: fileName,
             };
+            console.log(request)
             await executeUpload(request);
             alert("SQL uploaded successfully");
         } catch {
