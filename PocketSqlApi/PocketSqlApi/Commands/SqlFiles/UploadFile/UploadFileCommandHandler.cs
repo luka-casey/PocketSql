@@ -44,6 +44,7 @@ public class UploadFileCommandHandler
                     FileName VARCHAR(255) NOT NULL,
                     CreatedDateTime DATETIME NOT NULL,
                     ModifiedDateTime DATETIME NULL
+                    
                 );
             ";
 

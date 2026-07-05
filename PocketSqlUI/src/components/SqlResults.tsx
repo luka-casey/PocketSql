@@ -2,7 +2,7 @@
 import * as monaco from "monaco-editor";
 import { Box, Paper, Typography } from "@mui/material";
 import DataTable, { type TableColumn } from "react-data-table-component";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface SqlResultsProps {
   columns: TableColumn<Record<string, any>>[];
@@ -11,9 +11,13 @@ interface SqlResultsProps {
   results: Record<string, any>[];
   dataTableRef?: React.RefObject<HTMLDivElement | null>; // optional wrapper ref from parent
   togglePagination: boolean
+  queryExecuted?: boolean;
+  onNotificationHidden?: () => void;
 }
 
 export function SqlResults(props: SqlResultsProps) {
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+
   // The element that will receive key events and is a good fallback to scroll
   const scrollableRef = useRef<HTMLDivElement | null>(null);
 
@@ -155,6 +159,17 @@ export function SqlResults(props: SqlResultsProps) {
     return () => listenerRoot.removeEventListener("keydown", onKeyDown, { capture: true });
   }, [props.editorRef, wrapperRef, scrollableRef]);
 
+  // Show success notification when query executes
+  useEffect(() => {
+    if (props.queryExecuted) {
+      setShowSuccessNotification(true);
+      const timer = setTimeout(() => {
+        setShowSuccessNotification(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [props.queryExecuted]);
+
   return (
     <Box
       ref={wrapperRef}
@@ -182,6 +197,26 @@ export function SqlResults(props: SqlResultsProps) {
         }
       }}
     >
+      {showSuccessNotification && (
+        <Box
+          sx={{
+            height: 3,
+            width: "100%",
+            bgcolor: "#90ee90",
+            animation: "sweep 0.2s ease-in-out forwards",
+            "@keyframes sweep": {
+              from: {
+                transform: "scaleX(0)",
+                transformOrigin: "left",
+              },
+              to: {
+                transform: "scaleX(1)",
+                transformOrigin: "left",
+              },
+            },
+          }}
+        />
+      )}
       {props.error && (
         <Typography color="error" variant="body2">
           Error: {props.error}
@@ -209,6 +244,21 @@ export function SqlResults(props: SqlResultsProps) {
             pagination={props.togglePagination}
             paginationPerPage={20}
           />
+        ) : props.queryExecuted ? (
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              opacity: 0.6,
+              p: 2,
+            }}
+          >
+            <Typography variant="body1" sx={{ color: "#ccc" }}>
+              Query executed successfully. No results returned.
+            </Typography>
+          </Box>
         ) : (
           <Box
             sx={{

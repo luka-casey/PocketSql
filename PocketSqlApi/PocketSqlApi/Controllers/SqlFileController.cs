@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using PocketSqlApi.Commands.SqlFiles.DeleteFile;
 using PocketSqlApi.Commands.SqlFiles.EditFile;
 using PocketSqlApi.Commands.SqlFiles.UploadFile;
 using PocketSqlApi.Models;
 using PocketSqlApi.Queries.SqlFiles.GetAllFiles;
 using PocketSqlApi.Queries.SqlFiles.GetFile;
+using PocketSqlApi.Queries.SqlFiles.GetFileByName;
 
 namespace PocketSqlApi.Controllers;
 
@@ -33,6 +35,14 @@ public class SqlFileController : ControllerBase
         return result;
     }
 
+    [HttpGet("getFileByName")]
+    public async Task<SqlFileValueData> GetFileByName([FromQuery] GetFileByNameRequest request)
+    {
+        SqlFileValueData result = await new GetFileByNameQueryHandler(_config.GetConnectionString("Default"))
+            .Handle(new GetFileByNameQuery(request));
+        return result;
+    }
+
 
     [HttpPatch("editFile")]
     public async Task<IActionResult> EditFile([FromBody] EditFileRequest editFileRequest)
@@ -52,6 +62,14 @@ public class SqlFileController : ControllerBase
 
         // Return 200 OK with the data
         return Ok(result);
+    }
+
+    [HttpPost("deleteFile")]
+    public async Task<IActionResult> DeleteFile(DeleteFileRequest deleteFileRequest)
+    {
+        await new DeleteFileCommandHandler(_config.GetConnectionString("Default")).
+            Handle(new DeleteFileCommand(deleteFileRequest));
+        return Ok();
     }
 
     //TODO: implement download file endpoint 

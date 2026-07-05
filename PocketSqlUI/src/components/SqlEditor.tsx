@@ -34,6 +34,7 @@ export function SqlEditor() {
 	const selectedDbRef = useRef<string>("");
 	const [columns, setColumns] = useState<TableColumn<Record<string, any>>[]>([]);
 	const [currentFile, setCurrentFile] = useState<SqlFileValueData | undefined>(undefined);
+	const [queryExecuted, setQueryExecuted] = useState<boolean>(false);
     const [togglePagination, setTogglePagination] = useState<boolean>(true); 
     const [toggleResultsPane, setToggleResultsPane] = useState<boolean>(true); 
     const [toggleEditor, setToggleEditor] = useState<boolean>(true); 
@@ -73,6 +74,7 @@ export function SqlEditor() {
 		const currentSql = editorRef.current.getValue();
 		setSqlValue(currentSql);
 		setError(null);
+		setQueryExecuted(false);
 
 		if (!selectedDbRef.current) {
 			setError("Please select a database before running the query.");
@@ -88,6 +90,7 @@ export function SqlEditor() {
 			const data = await ExecuteQuery(request);
 			const freshRows = Array.isArray(data) ? data.map((r: Record<string, any>) => ({ ...r })) : [];
 			setResults(freshRows);
+			setQueryExecuted(true);
 		} catch (err: any) {
 			console.error("executeQuery error:", err);
 			if (err && typeof err === "object" && "error" in err) setError((err as ExecuteQueryErrorResponse).error);
@@ -175,6 +178,7 @@ export function SqlEditor() {
             setSqlValue("SELECT * FROM ")
             setResults([])
             setCurrentFile(undefined)
+            setQueryExecuted(false);
         }
         else {
             const proceed = window.confirm(`Are you sure you want to create a new file? Any unsaved changes will be deleted?`);
@@ -183,6 +187,7 @@ export function SqlEditor() {
             setSqlValue("SELECT * FROM ")
             setResults([])
             setCurrentFile(undefined)
+            setQueryExecuted(false);
         }
     }
 
@@ -200,9 +205,11 @@ export function SqlEditor() {
 			};
 
 			try {
+				setQueryExecuted(false);
                 const data = await ExecuteQuery(request);
 				const freshRows = Array.isArray(data) ? data.map((r: Record<string, any>) => ({ ...r })) : [];
 				setResults(freshRows);
+				setQueryExecuted(true);
                 setCurrentFile(undefined);
                 setSqlValue("SELECT * FROM ")
                 loadSchema(selectedDbRef.current)
@@ -364,6 +371,8 @@ export function SqlEditor() {
                     results={results}
                     dataTableRef={dataTableRef}
                     togglePagination={togglePagination}
+                    queryExecuted={queryExecuted}
+                    onNotificationHidden={() => setQueryExecuted(false)}
                 />
                 )}
             </Box>
