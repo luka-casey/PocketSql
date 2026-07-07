@@ -17,6 +17,7 @@ export interface SqlFileValueData {
   id: number;
   sqlText: string;
   fileName: string;
+  fileType: string | null;
   databaseName: string;
   createdDateTime: string; // or Date if you parse it
   modifiedDateTime: string | null; // or Date | null

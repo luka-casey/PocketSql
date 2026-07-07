@@ -23,7 +23,9 @@ public class ExecuteQueryHandler
         {
             var sql = query.Request.SqlQuery?.Trim();
             if (string.IsNullOrWhiteSpace(sql))
+            {
                 return SqlQueryResult.Fail("SQL query cannot be empty.");
+            }
 
             var builder = new MySqlConnectionStringBuilder(_connectionString)
             {
@@ -34,50 +36,23 @@ public class ExecuteQueryHandler
             await conn.OpenAsync();
 
             var rows = (await conn.QueryAsync(sql)).ToList();
+            var isViewOrProcChange = IsViewOrProcChange(sql);
 
-            // 🔹 NEW: handle multiple statements
-            var statements = sql
-                .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-            //Create files for Views and Stored Procedures
-            bool isViewOrStoredProc = Regex.IsMatch(
-                sql,
-                @"^\s*(CREATE|ALTER|DROP)\s+(OR\s+REPLACE\s+)?(VIEW|PROC(EDURE)?)",
-                RegexOptions.IgnoreCase
-            );
-
-            if (isViewOrStoredProc)
+            if (isViewOrProcChange)
             {
-                foreach (var statement in statements)
-                {
-                    await ProcessViewOrStoredProcChange(statement, query.Request.DatabaseName);
-                }
+                await ProcessViewOrStoredProcChange(sql, query.Request.DatabaseName);
             }
 
             if (rows.Any())
             {
                 return SqlQueryResult.Ok(rows);
             }
-            else // If no result rows, run as a command to get rowsAffected
+
+            return SqlQueryResult.Ok(new
             {
-                if (isViewOrStoredProc == true) // Dont want to run ExecuteAsync for stored proc because it runs it twice.
-                {
-                    return SqlQueryResult.Ok(new
-                    {
-                        message = "Query executed successfully.",
-                        rowsAffected = 1
-                    });
-                }
-                else 
-                {
-                    var affected = await conn.ExecuteAsync(sql); //Gets rows effected
-                    return SqlQueryResult.Ok(new
-                    {
-                        message = "Query executed successfully.",
-                        rowsAffected = affected
-                    });
-                }
-            }
+                message = "Query executed successfully.",
+                rowsAffected = rows is null ? 0 : rows.Count
+            });
         }
         catch (MySqlException ex)
         {
@@ -91,11 +66,118 @@ public class ExecuteQueryHandler
 
     public async Task ProcessViewOrStoredProcChange(string sql, string databaseName)
     {
-        SqlActionEnum action = SqlActionEnum.Unknown;
+        var (action, type, objectName) = GetSchemaChangeMetadata(sql);
 
-        // 🔹 Extract object name
-        string objectName = "UNKNOWN";
+        switch (action, type)
+        {
+            case (SqlActionEnum.Create, SqlObjectTypeEnum.View):
+                await CreateFile(sql, databaseName, objectName, "View");
+                break;
 
+            case (SqlActionEnum.CreateOrReplace, SqlObjectTypeEnum.View):
+            case (SqlActionEnum.CreateOrReplace, SqlObjectTypeEnum.Procedure):
+                await CreateOrReplaceFile(sql, databaseName, objectName, type == SqlObjectTypeEnum.View ? "View" : "Proc");
+                break;
+
+            case (SqlActionEnum.Alter, SqlObjectTypeEnum.View):
+            case (SqlActionEnum.Alter, SqlObjectTypeEnum.Procedure):
+                await AlterFile(sql, databaseName, objectName);
+                break;
+
+            case (SqlActionEnum.Drop, SqlObjectTypeEnum.View):
+            case (SqlActionEnum.Drop, SqlObjectTypeEnum.Procedure):
+                await DropFile(databaseName, objectName);
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unsupported schema change: {sql}");
+        }
+    }
+
+    public async Task CreateFile(string sql, string databaseName, string fileName, string fileType)
+    {
+        var sqlFileController = new SqlFileController(_config);
+
+        var request = new UploadFileRequest
+        {
+            Sql = sql,
+            FileName = fileName,
+            DatabaseName = databaseName,
+            FileType = fileType
+        };
+
+        await sqlFileController.UploadFile(request);
+    }
+
+    public async Task CreateOrReplaceFile(string sql, string databaseName, string fileName, string fileType)
+    {
+        var sqlFileController = new SqlFileController(_config);
+        var existingFile = await sqlFileController.GetFileByName(new GetFileByNameRequest
+        {
+            DatabaseName = databaseName,
+            FileName = fileName
+        });
+
+        if (existingFile is null)
+        {
+            await CreateFile(sql, databaseName, fileName, fileType);
+            return;
+        }
+
+        await sqlFileController.EditFile(new EditFileRequest
+        {
+            Id = existingFile.Id,
+            Sql = sql,
+            FileName = fileName,
+            DatabaseName = databaseName
+        });
+    }
+
+    public async Task AlterFile(string sql, string databaseName, string fileName)
+    {
+        var sqlFileController = new SqlFileController(_config);
+
+        var existingFile = await sqlFileController.GetFileByName(new GetFileByNameRequest
+        {
+            DatabaseName = databaseName,
+            FileName = fileName
+        });
+
+        if (existingFile is null)
+        {
+            throw new InvalidOperationException($"Unable to find a saved file for '{fileName}'.");
+        }
+
+        await sqlFileController.EditFile(new EditFileRequest
+        {
+            Id = existingFile.Id,
+            Sql = sql,
+            FileName = fileName,
+            DatabaseName = databaseName
+        });
+    }
+
+    public async Task DropFile(string databaseName, string fileName)
+    {
+        var sqlFileController = new SqlFileController(_config);
+
+        await sqlFileController.DeleteFile(new DeleteFileRequest
+        {
+            DatabaseName = databaseName,
+            FileName = fileName
+        });
+    }
+
+    private static bool IsViewOrProcChange(string sql) =>
+        Regex.IsMatch(
+            sql,
+            @"^\s*(CREATE|ALTER|DROP)\s+(OR\s+REPLACE\s+)?(VIEW|PROC(EDURE)?)",
+            RegexOptions.IgnoreCase
+        );
+
+    private static (SqlActionEnum Action, SqlObjectTypeEnum Type, string ObjectName) GetSchemaChangeMetadata(string sql)
+    {
+        var objectName = "UNKNOWN";
         var nameMatch = Regex.Match(
             sql,
             @"^\s*(?:CREATE\s+(?:OR\s+REPLACE\s+)?|ALTER\s+|DROP\s+)?(?:VIEW|PROCEDURE|PROC)\s+`?([a-zA-Z0-9_]+)`?",
@@ -107,158 +189,27 @@ public class ExecuteQueryHandler
             objectName = nameMatch.Groups[1].Value;
         }
 
-        Console.WriteLine($"Name: {objectName}");
+        var action = Regex.IsMatch(sql, @"^\s*CREATE\s+OR\s+REPLACE\b", RegexOptions.IgnoreCase)
+            ? SqlActionEnum.CreateOrReplace
+            : ParseAction(sql);
 
-        // 🔹 Action detection
-        if (Regex.IsMatch(sql, @"^\s*CREATE\s+OR\s+REPLACE\b", RegexOptions.IgnoreCase))
-        {
-            action = SqlActionEnum.CreateOrReplace;
-        }
-        else
-        {
-            var actionMatch = Regex.Match(
-                sql,
-                @"^\s*(CREATE|ALTER|DROP)\b",
-                RegexOptions.IgnoreCase
-            );
+        var type = Regex.IsMatch(sql, @"\bVIEW\b", RegexOptions.IgnoreCase)
+            ? SqlObjectTypeEnum.View
+            : Regex.IsMatch(sql, @"\b(PROCEDURE|PROC)\b", RegexOptions.IgnoreCase)
+                ? SqlObjectTypeEnum.Procedure
+                : SqlObjectTypeEnum.Unknown;
 
-            action = actionMatch.Success
-                ? Enum.Parse<SqlActionEnum>(actionMatch.Groups[1].Value, true)
-                : SqlActionEnum.Unknown;
-        }
-
-        // 🔹 Type detection
-        SqlObjectTypeEnum type = SqlObjectTypeEnum.Unknown;
-
-        if (Regex.IsMatch(sql, @"\bVIEW\b", RegexOptions.IgnoreCase))
-            type = SqlObjectTypeEnum.View;
-        else if (Regex.IsMatch(sql, @"\b(PROCEDURE|PROC)\b", RegexOptions.IgnoreCase))
-            type = SqlObjectTypeEnum.Procedure;
-
-        Console.WriteLine($"Action: {action}");
-        Console.WriteLine($"Type: {type}");
-
-        // 🔹 Switch
-        switch (action, type)
-        {
-            case (SqlActionEnum.Create, SqlObjectTypeEnum.View):
-                Console.WriteLine("CREATE VIEW");
-                await this.CreateViewFile(sql, databaseName, objectName);
-                break;
-
-            case (SqlActionEnum.CreateOrReplace, SqlObjectTypeEnum.View):
-                Console.WriteLine("CREATE OR REPLACE VIEW");
-                this.CreateOrReplaceViewFile();
-                break;
-
-            case (SqlActionEnum.Alter, SqlObjectTypeEnum.View):
-                Console.WriteLine("ALTER VIEW");
-                await this.AlterViewFile(sql, databaseName, objectName);
-                break;
-
-            case (SqlActionEnum.Drop, SqlObjectTypeEnum.View):
-                Console.WriteLine("DROP VIEW");
-                await this.DropViewFile(databaseName, objectName);
-                break;
-
-            case (SqlActionEnum.Create, SqlObjectTypeEnum.Procedure):
-                Console.WriteLine("CREATE PROCEDURE");
-                this.CreateStoredProcFile();
-                break;
-
-            case (SqlActionEnum.Alter, SqlObjectTypeEnum.Procedure):
-                Console.WriteLine("ALTER PROCEDURE");
-                this.AlterStoredProcFile();
-                break;
-
-            case (SqlActionEnum.Drop, SqlObjectTypeEnum.Procedure):
-                Console.WriteLine("DROP PROCEDURE");
-                this.DropStoredProcFile();
-                break;
-
-            default:
-                Console.WriteLine("UNKNOWN CHANGE");
-                throw new System.Exception();
-                break;
-        }
+        return (action, type, objectName);
     }
 
-    public async Task CreateViewFile(string sql, string databaseName, string fileName)
+    private static SqlActionEnum ParseAction(string sql)
     {
-        SqlFileController sqlFileController = new SqlFileController(_config);
+        var actionMatch = Regex.Match(sql, @"^\s*(CREATE|ALTER|DROP)\b", RegexOptions.IgnoreCase);
 
-        UploadFileRequest request = new UploadFileRequest
-        {
-            Sql = sql,
-            FileName = fileName,
-            DatabaseName = databaseName
-        };
-
-        await sqlFileController.UploadFile(request);
+        return actionMatch.Success
+            ? Enum.Parse<SqlActionEnum>(actionMatch.Groups[1].Value, true)
+            : SqlActionEnum.Unknown;
     }
-
-    public void CreateOrReplaceViewFile()
-    {
-    }
-
-    public async Task AlterViewFile(string sql, string databaseName, string fileName)
-    {
-        SqlFileController sqlFileController = new SqlFileController(_config);
-
-        GetFileByNameRequest getFileByNameRequest = new GetFileByNameRequest
-        {
-            DatabaseName = databaseName,
-            FileName = fileName
-        };
-        
-        SqlFileValueData? sqlFile = await sqlFileController.GetFileByName(getFileByNameRequest);
-        
-        if (sqlFile is null)
-        {
-            throw new System.Exception();
-        }
-
-        EditFileRequest editFileRequest = new EditFileRequest
-        {
-            Id = sqlFile.Id,
-            Sql = sql,
-            FileName = fileName,
-            DatabaseName = databaseName
-        };
-
-        await sqlFileController.EditFile(editFileRequest);
-    }
-
-    public async Task DropViewFile(string databaseName, string fileName)
-    {
-
-        SqlFileController sqlFileController = new SqlFileController(_config);
-
-        DeleteFileRequest deleteFileRequest = new DeleteFileRequest()
-        {
-            DatabaseName = databaseName,
-            FileName = fileName
-        };
-
-        await sqlFileController.DeleteFile(deleteFileRequest);
-        
-    }
-
-    public void CreateStoredProcFile()
-    {
-    }
-
-    public void AlterStoredProcFile()
-    {
-        
-    }
-
-    public void DropStoredProcFile()
-    {
-        
-    }
-
-    
 
     public enum SqlActionEnum
     {

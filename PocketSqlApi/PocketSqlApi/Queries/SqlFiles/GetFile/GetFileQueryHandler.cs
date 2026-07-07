@@ -26,7 +26,7 @@ public class GetFileQueryHandler
             await conn.OpenAsync();
 
             // Fetch the file by ID
-            var sql = "SELECT Id, SqlText, FileName, CreatedDateTime, ModifiedDateTime FROM SqlFiles WHERE Id = @Id;";
+            var sql = "SELECT Id, SqlText, FileName, FileType, CreatedDateTime, ModifiedDateTime FROM SqlFiles WHERE Id = @Id;";
             var file = await conn.QueryFirstOrDefaultAsync(sql, new { Id = query.Request.Id });
 
             if (file == null)
@@ -37,6 +37,7 @@ public class GetFileQueryHandler
                 Id = file.Id,
                 SqlText = file.SqlText,
                 FileName = file.FileName,
+                FileType = file.fileType,
                 DatabaseName = query.Request.DatabaseName,
                 CreatedDateTime = file.CreatedDateTime,
                 ModifiedDateTime = file.ModifiedDateTime

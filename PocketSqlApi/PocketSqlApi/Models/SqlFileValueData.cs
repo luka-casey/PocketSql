@@ -6,6 +6,7 @@ public class SqlFileValueData
     public string SqlText { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
     public string DatabaseName { get; set; } = string.Empty;
+    public string? FileType { get; set;}
     public DateTime CreatedDateTime { get; set; }
     public DateTime? ModifiedDateTime { get; set; }
 }

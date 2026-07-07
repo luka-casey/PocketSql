@@ -19,6 +19,7 @@ public class UploadFileCommandHandler
 
         string sqlContent = command.Request.Sql;
         string fileName = command.Request.FileName;
+        string? fileType = command.Request.FileType != null ? command.Request.FileType : null;
 
         if (string.IsNullOrWhiteSpace(sqlContent))
             throw new ArgumentException("SQL file content cannot be empty.", nameof(command.Request.Sql));
@@ -42,9 +43,9 @@ public class UploadFileCommandHandler
                     Id INT AUTO_INCREMENT PRIMARY KEY,
                     SqlText TEXT NOT NULL,
                     FileName VARCHAR(255) NOT NULL,
+                    FileType VARCHAR(255) NULL,
                     CreatedDateTime DATETIME NOT NULL,
                     ModifiedDateTime DATETIME NULL
-                    
                 );
             ";
 
@@ -52,14 +53,15 @@ public class UploadFileCommandHandler
 
             // Insert SQL text with CreatedDateTime, ModifiedDateTime = NULL
             var insertQuery = @"
-                INSERT INTO SqlFiles (SqlText, FileName, CreatedDateTime, ModifiedDateTime)
-                VALUES (@SqlText, @FileName, @CreatedDateTime, @ModifiedDateTime);
+                INSERT INTO SqlFiles (SqlText, FileName, FileType, CreatedDateTime, ModifiedDateTime)
+                VALUES (@SqlText, @FileName, @FileType, @CreatedDateTime, @ModifiedDateTime);
             ";
 
             await conn.ExecuteAsync(insertQuery, new
             {
                 SqlText = sqlContent,
                 FileName = fileName,
+                FileType = fileType,
                 CreatedDateTime = DateTime.UtcNow,
                 ModifiedDateTime = (DateTime?)null
             });

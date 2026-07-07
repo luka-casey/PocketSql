@@ -51,8 +51,8 @@ public class GetAllFilesQueryHandler
                     continue;
 
                 // ✅ Fetch rows into a lightweight object
-                var files = await newConn.QueryAsync<(int Id, string FileName)>(
-                    "SELECT Id, FileName FROM SqlFiles;"
+                var files = await newConn.QueryAsync<(int Id, string FileName, string? FileType)>(
+                    "SELECT Id, FileName, FileType FROM SqlFiles;"
                 );
 
                 foreach (var file in files)
@@ -61,7 +61,8 @@ public class GetAllFilesQueryHandler
                     {
                         DatabaseName = databaseName,
                         Id = file.Id,
-                        FileName = file.FileName
+                        FileName = file.FileName,
+                        FileType = file.FileType
                     });
                 }
             }

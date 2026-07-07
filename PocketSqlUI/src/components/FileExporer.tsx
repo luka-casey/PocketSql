@@ -21,6 +21,7 @@ export interface FileIdentifier {
   databaseName: string;
   id: number;
   fileName: string;
+  fileType?: string | null;
 }
 
 interface TreeNode {
@@ -28,6 +29,8 @@ interface TreeNode {
   name: string;
   children?: TreeNode[];
   isFile?: boolean;
+  databaseName?: string;
+  fileId?: number;
 }
 
 interface CollapsibleTreeWithIconsProps {
@@ -55,10 +58,40 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
             children: [],
           };
         }
-        dbMap[file.databaseName].children!.push({
+
+        const databaseNode = dbMap[file.databaseName];
+        const normalizedFileType = file.fileType?.trim().toLowerCase();
+        let parentNode: TreeNode | undefined;
+
+        if (normalizedFileType === "view") {
+          parentNode = databaseNode.children?.find((child) => child.name === "View" && !child.isFile);
+          if (!parentNode) {
+            parentNode = {
+              id: `${file.databaseName}-View`,
+              name: "View",
+              children: [],
+            };
+            databaseNode.children!.push(parentNode);
+          }
+        } else if (normalizedFileType === "proc") {
+          parentNode = databaseNode.children?.find((child) => child.name === "Stored Proc" && !child.isFile);
+          if (!parentNode) {
+            parentNode = {
+              id: `${file.databaseName}-Stored Proc`,
+              name: "Stored Proc",
+              children: [],
+            };
+            databaseNode.children!.push(parentNode);
+          }
+        }
+
+        const targetNode = parentNode ?? databaseNode;
+        targetNode.children!.push({
           id: `${file.databaseName}-${file.id}`,
           name: file.fileName,
           isFile: true,
+          databaseName: file.databaseName,
+          fileId: file.id,
         });
       });
 
@@ -92,9 +125,9 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
               if (hasChildren) {
                 toggleNode(node.id);
               } else {
-                const request = { 
-                  databaseName: node.id.split("-")[0], 
-                  id: parseInt(node.id.split("-")[1]) 
+                const request = {
+                  databaseName: node.databaseName ?? "",
+                  id: node.fileId ?? 0,
                 };
 
                 onFileClick(request);
