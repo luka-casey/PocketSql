@@ -117,7 +117,7 @@ export function Toolbar({
                     setSelectedDb={setSelectedDb}
                 />
 
-                <Tooltip title={<div><b>Save</b></div>} arrow>
+                {/* <Tooltip title={<div><b>Save</b></div>} arrow>
                     <Button
                         variant="text"
                         color="primary"
@@ -132,9 +132,9 @@ export function Toolbar({
                     >
                         <Save fontSize="small" sx={{ color: "white" }} />
                     </Button>
-                </Tooltip>
+                </Tooltip> */}
 
-                <Tooltip title={<div><b>Delete</b></div>} arrow>
+                {/* <Tooltip title={<div><b>Delete</b></div>} arrow>
                     <Button
                         variant="text"
                         color="primary"
@@ -149,7 +149,7 @@ export function Toolbar({
                     >
                         <Delete fontSize="small" sx={{ color: "white" }} />
                     </Button>
-                </Tooltip>
+                </Tooltip> */}
 
                 <Tooltip title={<div><b>New file</b></div>} arrow>
                     <Button
