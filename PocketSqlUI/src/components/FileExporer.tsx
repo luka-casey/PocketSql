@@ -13,6 +13,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { GetAllFiles } from "../clients/SqlFileClient";
 import type { GetFileRequest } from "../Interfaces";
 import StorageIcon from "@mui/icons-material/Storage";
@@ -171,14 +172,21 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
           backgroundColor: "#121212",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <IconButton size="small" onClick={() => setCollapsed(!collapsed)}>
-            <MenuIcon sx={{ fontSize: 25, color: "white" }} />
-          </IconButton>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <IconButton size="small" onClick={() => setCollapsed(!collapsed)}>
+              <MenuIcon sx={{ fontSize: 25, color: "white" }} />
+            </IconButton>
+            {!collapsed && (
+              <Typography variant="subtitle2" sx={{ ml: 1, color: "white" }}>
+                Object Explorer
+              </Typography>
+            )}
+          </Box>
           {!collapsed && (
-            <Typography variant="subtitle2" sx={{ ml: 1, color: "white" }}>
-              Object Explorer
-            </Typography>
+            <IconButton size="small" onClick={() => void fetchFiles()} sx={{ color: "white" }}>
+              <RefreshIcon fontSize="small" />
+            </IconButton>
           )}
         </Box>
 

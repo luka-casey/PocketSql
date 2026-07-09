@@ -191,37 +191,6 @@ export function SqlEditor() {
         }
     }
 
-	const executeDelete = async () => {
-		let request: ExecuteQueryRequest | undefined = undefined;
-
-		if (currentFile !== undefined) {
-
-            const proceed = window.confirm(`Are you sure you want to delete ${currentFile.fileName}`);
-            if (!proceed) return;
-
-			request = {
-				databaseName: selectedDbRef.current,
-				sqlQuery: `DELETE FROM SqlFiles WHERE Id = ${currentFile.id}` //currentSql
-			};
-
-			try {
-				setQueryExecuted(false);
-                const data = await ExecuteQuery(request);
-				const freshRows = Array.isArray(data) ? data.map((r: Record<string, any>) => ({ ...r })) : [];
-				setResults(freshRows);
-				setQueryExecuted(true);
-                setCurrentFile(undefined);
-                setSqlValue("SELECT * FROM ")
-                loadSchema(selectedDbRef.current)
-
-			} catch (err: any) {
-				console.error("executeQuery error:", err);
-				if (err && typeof err === "object" && "error" in err) setError((err as ExecuteQueryErrorResponse).error);
-				else setError(err?.message ?? "Unknown error");
-			}
-		} 
-	}
-
 //TODO: Investigate bug about "missing database name"
 	const executeUpload = async (request: UploadFileRequest) => {
 		try {
@@ -306,11 +275,8 @@ export function SqlEditor() {
                     setSelectedDb={setSelectedDb}
                     databases={databases}
                     setDatabases={setDatabases}
-                    editorRef={editorRef}
                     sqlValue={sqlValue}
                     executeUpload={executeUpload}
-                    existingFileName={currentFile?.fileName}
-                    executeDelete={executeDelete}
                     createNewFile={createNewFile}
                     togglePagination={togglePagination}
                     setTogglePagination={setTogglePagination}

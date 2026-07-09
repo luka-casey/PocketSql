@@ -12,11 +12,8 @@ import {
     Divider,
 } from "@mui/material";
 import DatabaseDropdown from "./DatabaseDropdown";
-import type * as monaco from "monaco-editor";
-import Save from "@mui/icons-material/SaveSharp";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import type { UploadFileRequest } from "../Interfaces";
-import Delete from "@mui/icons-material/Delete";
 import NoteAdd from "@mui/icons-material/NoteAdd";
 import AutoStories from "@mui/icons-material/AutoStories";
 import TableViewIcon from "@mui/icons-material/GridOff";
@@ -27,11 +24,8 @@ export interface ToolbarProps {
     setSelectedDb?: React.Dispatch<React.SetStateAction<string>>;
     databases: string[];
     setDatabases: React.Dispatch<React.SetStateAction<string[]>>;
-    editorRef: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
     sqlValue: string;
     executeUpload: (payload: UploadFileRequest) => Promise<any>;
-    existingFileName: string | undefined;
-    executeDelete: () => Promise<any>;
     createNewFile: () => Promise<any>;
     togglePagination: boolean;
     setTogglePagination: React.Dispatch<React.SetStateAction<boolean>>;
@@ -46,11 +40,8 @@ export function Toolbar({
     setSelectedDb,
     databases,
     setDatabases,
-    editorRef,
     sqlValue,
     executeUpload,
-    existingFileName,
-    executeDelete,
     createNewFile,
     togglePagination,
     setTogglePagination,
@@ -61,18 +52,6 @@ export function Toolbar({
 }: ToolbarProps) {
     const [openDialog, setOpenDialog] = useState(false);
     const [fileName, setFileName] = useState("");
-
-    const handleUploadClick = () => {
-        if (!editorRef.current) return;
-        setFileName(existingFileName || "");
-        setOpenDialog(true);
-    };
-
-    const handleDeleteClick = async () => {
-        if (!editorRef.current) return;
-        setFileName(existingFileName || "");
-        await executeDelete();
-    };
 
     const handleConfirm = async () => {
         if (!fileName) return;
