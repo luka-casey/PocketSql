@@ -16,7 +16,9 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { GetAllFiles } from "../clients/SqlFileClient";
 import type { GetFileRequest } from "../Interfaces";
+import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import StorageIcon from "@mui/icons-material/Storage";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 export interface FileIdentifier {
   databaseName: string;
@@ -65,21 +67,21 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
         let parentNode: TreeNode | undefined;
 
         if (normalizedFileType === "view") {
-          parentNode = databaseNode.children?.find((child) => child.name === "View" && !child.isFile);
+          parentNode = databaseNode.children?.find((child) => child.name === "Views" && !child.isFile);
           if (!parentNode) {
             parentNode = {
-              id: `${file.databaseName}-View`,
-              name: "View",
+              id: `${file.databaseName}-Views`,
+              name: "Views",
               children: [],
             };
             databaseNode.children!.push(parentNode);
           }
         } else if (normalizedFileType === "proc") {
-          parentNode = databaseNode.children?.find((child) => child.name === "Stored Proc" && !child.isFile);
+          parentNode = databaseNode.children?.find((child) => child.name === "Stored Procs" && !child.isFile);
           if (!parentNode) {
             parentNode = {
-              id: `${file.databaseName}-Stored Proc`,
-              name: "Stored Proc",
+              id: `${file.databaseName}-Stored Procs`,
+              name: "Stored Procs",
               children: [],
             };
             databaseNode.children!.push(parentNode);
@@ -137,9 +139,17 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
             sx={{ pl: 1 + level * 1.5, py: 0.3, minHeight: 24 }}
           >
             <ListItemIcon sx={{ minWidth: 20, color: "white", mr: 0.5 }}>
-              {hasChildren
-                ? <StorageIcon fontSize="small" />
-                : <InsertDriveFileIcon fontSize="small" />}
+              {hasChildren ? (
+                node.name === "Views" ? (
+                  <VisibilityIcon fontSize="small" />
+                ) : node.name === "Stored Procs" ? (
+                  <SettingsApplicationsIcon fontSize="small" />
+                ) : (
+                  <StorageIcon fontSize="small" />
+                )
+              ) : (
+                <InsertDriveFileIcon fontSize="small" />
+              )}
             </ListItemIcon>
 
             <ListItemText
