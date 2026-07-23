@@ -291,7 +291,7 @@ export function SqlEditor() {
                     <CollapsibleTreeWithIcons
                         ref={explorerRef}
                         onFileClick={handleFileClick}
-                        databaseName={currentFile?.databaseName}
+                        databaseName={selectedDb || currentFile?.databaseName}
                     />
                 </div>
 

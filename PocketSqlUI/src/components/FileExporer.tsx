@@ -15,10 +15,12 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { GetAllFiles } from "../clients/SqlFileClient";
+import { GetSchema } from "../clients/SqlQueryClient";
 import type { GetFileRequest } from "../Interfaces";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import TableRowsIcon from "@mui/icons-material/TableRows";
 
 export interface FileIdentifier {
   databaseName: string;
@@ -51,9 +53,11 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
 
     const fetchFiles = async () => {
       const files = await GetAllFiles();
+      const schema = databaseName ? await GetSchema(databaseName) : [];
+      const filteredFiles = databaseName ? files.filter((file) => file.databaseName === databaseName) : files;
 
       const dbMap: Record<string, TreeNode> = {};
-      files.forEach((file) => {
+      filteredFiles.forEach((file) => {
         if (!dbMap[file.databaseName]) {
           dbMap[file.databaseName] = {
             id: file.databaseName,
@@ -98,7 +102,44 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
         });
       });
 
-      setTreeData(Object.values(dbMap));
+      if (databaseName) {
+        if (!dbMap[databaseName]) {
+          dbMap[databaseName] = {
+            id: databaseName,
+            name: databaseName,
+            children: [],
+          };
+        }
+
+        const databaseNode = dbMap[databaseName];
+        const tablesNode: TreeNode = {
+          id: `${databaseName}-Tables`,
+          name: "Tables",
+          children: schema.map((table) => ({
+            id: `${databaseName}-Table-${table.table}`,
+            name: table.table,
+            children: table.columns.map((column) => ({
+              id: `${databaseName}-Table-${table.table}-Column-${column.columnName}`,
+              name: `${column.columnName} (${column.dataType})`,
+            })),
+          })),
+        };
+
+        if (tablesNode.children?.length) {
+          databaseNode.children!.push(tablesNode);
+        }
+      }
+
+      const sortNode = (node: TreeNode) => {
+        if (!node.children) return;
+        node.children.sort((a, b) => a.name.localeCompare(b.name));
+        node.children.forEach(sortNode);
+      };
+
+      const sortedTree = Object.values(dbMap);
+      sortedTree.sort((a, b) => a.name.localeCompare(b.name));
+      sortedTree.forEach(sortNode);
+      setTreeData(sortedTree);
     };
 
     useEffect(() => {
@@ -127,12 +168,11 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
             onClick={() => {
               if (hasChildren) {
                 toggleNode(node.id);
-              } else {
+              } else if (node.fileId !== undefined && node.databaseName) {
                 const request = {
-                  databaseName: node.databaseName ?? "",
-                  id: node.fileId ?? 0,
+                  databaseName: node.databaseName,
+                  id: node.fileId,
                 };
-
                 onFileClick(request);
               }
             }}
@@ -144,6 +184,8 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
                   <VisibilityIcon fontSize="small" />
                 ) : node.name === "Stored Procs" ? (
                   <SettingsApplicationsIcon fontSize="small" />
+                ) : node.name === "Tables" ? (
+                  <TableRowsIcon fontSize="small" />
                 ) : (
                   <StorageIcon fontSize="small" />
                 )
