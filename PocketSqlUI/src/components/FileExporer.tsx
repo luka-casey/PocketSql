@@ -21,6 +21,9 @@ import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import TableRowsIcon from "@mui/icons-material/TableRows";
+import TableChartIcon from "@mui/icons-material/TableChart";
+import DataObjectIcon from "@mui/icons-material/DataObject";
+import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 
 export interface FileIdentifier {
   databaseName: string;
@@ -36,6 +39,7 @@ interface TreeNode {
   isFile?: boolean;
   databaseName?: string;
   fileId?: number;
+  nodeType?: "table" | "column";
 }
 
 interface CollapsibleTreeWithIconsProps {
@@ -118,9 +122,11 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
           children: schema.map((table) => ({
             id: `${databaseName}-Table-${table.table}`,
             name: table.table,
+            nodeType: "table" as const,
             children: table.columns.map((column) => ({
               id: `${databaseName}-Table-${table.table}-Column-${column.columnName}`,
               name: `${column.columnName} (${column.dataType})`,
+              nodeType: "column" as const,
             })),
           })),
         };
@@ -184,11 +190,15 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
                   <VisibilityIcon fontSize="small" />
                 ) : node.name === "Stored Procs" ? (
                   <SettingsApplicationsIcon fontSize="small" />
-                ) : node.name === "Tables" ? (
-                  <TableRowsIcon fontSize="small" />
+                ) : node.name === "Tables" || node.nodeType === "table" ? (
+                  <TableChartIcon fontSize="small" />
+                ) : node.nodeType === "column" ? (
+                  <ViewColumnIcon fontSize="small" />
                 ) : (
                   <StorageIcon fontSize="small" />
                 )
+              ) : node.nodeType === "column" ? (
+                <ViewColumnIcon fontSize="small" />
               ) : (
                 <InsertDriveFileIcon fontSize="small" />
               )}
