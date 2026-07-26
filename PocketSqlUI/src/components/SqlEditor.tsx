@@ -24,7 +24,7 @@ export function SqlEditor() {
 	const schemaRef = useRef<TableSchema[]>([]);
 	const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 	const dataTableRef = useRef<HTMLDivElement | null>(null);
-	const explorerRef = useRef<{ refresh: () => void }>(null); // 👈 ref for explorer
+	const explorerRef = useRef<{ refresh: () => Promise<void> }>(null);
 
 	const [sqlValue, setSqlValue] = useState<string>("SELECT * FROM ");
 	const [results, setResults] = useState<Record<string, any>[]>([]);
@@ -53,6 +53,10 @@ export function SqlEditor() {
 			console.error("GetSchema failed", err);
 			schemaRef.current = [];
 		}
+	};
+
+	const handleExplorerRefresh = async (schema: TableSchema[]) => {
+		schemaRef.current = schema ?? [];
 	};
 
 	useEffect(() => {
@@ -292,6 +296,7 @@ export function SqlEditor() {
                         ref={explorerRef}
                         onFileClick={handleFileClick}
                         databaseName={selectedDb || currentFile?.databaseName}
+                        onRefresh={handleExplorerRefresh}
                     />
                 </div>
 

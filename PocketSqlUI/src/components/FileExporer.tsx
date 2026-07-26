@@ -16,13 +16,11 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { GetAllFiles } from "../clients/SqlFileClient";
 import { GetSchema } from "../clients/SqlQueryClient";
-import type { GetFileRequest } from "../Interfaces";
+import type { GetFileRequest, TableSchema } from "../Interfaces";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import TableRowsIcon from "@mui/icons-material/TableRows";
 import TableChartIcon from "@mui/icons-material/TableChart";
-import DataObjectIcon from "@mui/icons-material/DataObject";
 import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 
 export interface FileIdentifier {
@@ -45,23 +43,25 @@ interface TreeNode {
 interface CollapsibleTreeWithIconsProps {
   onFileClick: (request: GetFileRequest) => void;
   databaseName: string | undefined;
+  onRefresh?: (schema: TableSchema[]) => void | Promise<void>;
 }
 
 //TODO Sort alphabetically 
 
-const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, CollapsibleTreeWithIconsProps>(
-  ({ onFileClick, databaseName }, ref) => {
+const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => Promise<void> }, CollapsibleTreeWithIconsProps>(
+  ({ onFileClick, databaseName, onRefresh }, ref) => {
     const [openIds, setOpenIds] = useState<Set<string>>(new Set());
     const [collapsed, setCollapsed] = useState(true);
     const [treeData, setTreeData] = useState<TreeNode[]>([]);
 
     const fetchFiles = async () => {
-      const files = await GetAllFiles();
-      const schema = databaseName ? await GetSchema(databaseName) : [];
-      const filteredFiles = databaseName ? files.filter((file) => file.databaseName === databaseName) : files;
+      try {
+        const files = await GetAllFiles();
+        const schema = databaseName ? await GetSchema(databaseName) : [];
+        const filteredFiles = databaseName ? files.filter((file) => file.databaseName === databaseName) : files;
 
-      const dbMap: Record<string, TreeNode> = {};
-      filteredFiles.forEach((file) => {
+        const dbMap: Record<string, TreeNode> = {};
+        filteredFiles.forEach((file) => {
         if (!dbMap[file.databaseName]) {
           dbMap[file.databaseName] = {
             id: file.databaseName,
@@ -106,46 +106,52 @@ const CollapsibleTreeWithIcons = forwardRef<{ refresh: () => void }, Collapsible
         });
       });
 
-      if (databaseName) {
-        if (!dbMap[databaseName]) {
-          dbMap[databaseName] = {
-            id: databaseName,
-            name: databaseName,
-            children: [],
+        if (databaseName) {
+          if (!dbMap[databaseName]) {
+            dbMap[databaseName] = {
+              id: databaseName,
+              name: databaseName,
+              children: [],
+            };
+          }
+
+          const databaseNode = dbMap[databaseName];
+          const tablesNode: TreeNode = {
+            id: `${databaseName}-Tables`,
+            name: "Tables",
+            children: schema.map((table) => ({
+              id: `${databaseName}-Table-${table.table}`,
+              name: table.table,
+              nodeType: "table" as const,
+              children: table.columns.map((column) => ({
+                id: `${databaseName}-Table-${table.table}-Column-${column.columnName}`,
+                name: `${column.columnName} (${column.dataType})`,
+                nodeType: "column" as const,
+              })),
+            })),
           };
+
+          if (tablesNode.children?.length) {
+            databaseNode.children!.push(tablesNode);
+          }
         }
 
-        const databaseNode = dbMap[databaseName];
-        const tablesNode: TreeNode = {
-          id: `${databaseName}-Tables`,
-          name: "Tables",
-          children: schema.map((table) => ({
-            id: `${databaseName}-Table-${table.table}`,
-            name: table.table,
-            nodeType: "table" as const,
-            children: table.columns.map((column) => ({
-              id: `${databaseName}-Table-${table.table}-Column-${column.columnName}`,
-              name: `${column.columnName} (${column.dataType})`,
-              nodeType: "column" as const,
-            })),
-          })),
+        const sortNode = (node: TreeNode) => {
+          if (!node.children) return;
+          node.children.sort((a, b) => a.name.localeCompare(b.name));
+          node.children.forEach(sortNode);
         };
 
-        if (tablesNode.children?.length) {
-          databaseNode.children!.push(tablesNode);
-        }
+        const sortedTree = Object.values(dbMap);
+        sortedTree.sort((a, b) => a.name.localeCompare(b.name));
+        sortedTree.forEach(sortNode);
+        setTreeData(sortedTree);
+
+        await onRefresh?.(schema);
+      } catch (error) {
+        console.error("Failed to refresh object explorer", error);
+        setTreeData([]);
       }
-
-      const sortNode = (node: TreeNode) => {
-        if (!node.children) return;
-        node.children.sort((a, b) => a.name.localeCompare(b.name));
-        node.children.forEach(sortNode);
-      };
-
-      const sortedTree = Object.values(dbMap);
-      sortedTree.sort((a, b) => a.name.localeCompare(b.name));
-      sortedTree.forEach(sortNode);
-      setTreeData(sortedTree);
     };
 
     useEffect(() => {
