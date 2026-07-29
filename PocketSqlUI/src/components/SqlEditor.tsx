@@ -171,13 +171,8 @@ export function SqlEditor() {
 
 
     const createNewFile = async () => {
-        console.log(sqlValue)
-        console.log(currentFile?.sqlText)
-
         if (sqlValue === "SELECT * FROM ")
         {
-            
-
         } else if (sqlValue === currentFile?.sqlText) {
             setSqlValue("SELECT * FROM ")
             setResults([])
