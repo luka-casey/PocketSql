@@ -17,7 +17,7 @@ PocketSQL focuses on:
 * Keyboard-first workflow
 * Lightweight footprint for ARM64 devices
 
-<img width="1660" height="949" alt="619815407-19ae8d4b-5e7e-4f7e-8936-fdd0a01fc09a" src="https://github.com/user-attachments/assets/7f1d8818-a051-47b4-9e9c-0a29dc9f6efb" />
+<img width="1300" height="780" alt="626010426-1e559c94-7f4e-4839-b226-6132da0dd257" src="https://github.com/user-attachments/assets/09ccbbe2-868e-4e4f-ac74-bde409c8f017" />
 
 ---
 
