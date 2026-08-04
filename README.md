@@ -9,6 +9,7 @@ Download the latest release for the most up-to-date features and bug fixes
 
 ![PXL_20250916_021932763 PORTRAIT ORIGINAL](https://github.com/user-attachments/assets/d8c9e27c-ee02-4ad6-89d3-3a22fda75a82)
 
+
 ---
 
 PocketSQL focuses on:
