@@ -150,3 +150,7 @@ Want to help? Great! Open an issue or send a PR. Suggestions for:
 This project started as a personal tool to get a compact, keyboard-friendly SQL UI running on the ClockworkPi uConsole. If you find it useful, drop a star and feedback is welcome!
 
 ---
+
+
+
+
