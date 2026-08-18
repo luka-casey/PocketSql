@@ -152,11 +152,3 @@ This project started as a personal tool to get a compact, keyboard-friendly SQL 
 ---
 
 
-
-
-
-
-
-
-
-
