@@ -11,6 +11,7 @@ Download the latest release for the most up-to-date features and bug fixes
 
 ---
 
+
 PocketSQL focuses on:
 
 * Small-screen-friendly UI
